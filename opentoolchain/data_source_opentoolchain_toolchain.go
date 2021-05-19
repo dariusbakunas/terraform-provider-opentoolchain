@@ -74,6 +74,33 @@ func dataSourceOpenToolchainToolchain() *schema.Resource {
 					},
 				},
 			},
+			"services": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"broker_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"service_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"tags": {
+				Type: schema.TypeList,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Computed: true,
+			},
+			"lifecycle_messaging_webhook_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -101,6 +128,9 @@ func dataSourceOpenToolchainToolchainRead(ctx context.Context, d *schema.Resourc
 	d.Set("description", *toolchain.Description)
 	d.Set("key", *toolchain.Key)
 	d.Set("template", flattenToolchainTemplate(toolchain.Template))
+	d.Set("services", flattenToolchainServices(toolchain.Services))
+	d.Set("tags", toolchain.Tags)
+	d.Set("lifecycle_messaging_webhook_id", *toolchain.LifecycleMessagingWebhookID)
 
 	d.SetId(*toolchain.ToolchainGUID)
 	return diags
@@ -121,4 +151,19 @@ func flattenToolchainTemplate(tpl *oc.ToolchainTemplate) []interface{} {
 	mTpl["locale"] = *tpl.Locale
 
 	return []interface{}{mTpl}
+}
+
+func flattenToolchainServices(svcs []oc.Service) []interface{} {
+	var s []interface{}
+
+	for _, svc := range svcs {
+		service := map[string]interface{}{
+			"broker_id":  *svc.BrokerID,
+			"service_id": *svc.ServiceID,
+		}
+
+		s = append(s, service)
+	}
+
+	return s
 }
