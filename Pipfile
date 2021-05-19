@@ -1,0 +1,18 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+
+[packages]
+mkdocs = "*"
+mkdocs-material = "*"
+mkdocs-exclude = "*"
+pygments = "*"
+pymdown-extensions = "*"
+mkdocs-git-revision-date-localized-plugin = "*"
+fontawesome-markdown = "*"
+
+[requires]
+python_version = "3.8"

@@ -1,0 +1,42 @@
+site_name: Terraform Provider for Open Toolchain
+repo_name: 'dbakuna/terraform-provider-opentoolchain'
+repo_url: 'https://github.ibm.com/dbakuna/terraform-provider-opentoolchain'
+
+theme:
+  name: 'material'
+  feature:
+    navigation.tabs: false
+  palette:
+    primary: 'blue grey'
+
+# edit_uri: edit/master/docs
+
+plugins:
+  - search
+  - git-revision-date-localized:
+      type: timeago
+
+markdown_extensions:
+  - attr_list
+  - codehilite:
+      guess_lang: false
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.critic
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_generator: !!python/name:pymdownx.emoji.to_svg
+  - pymdownx.inlinehilite
+  - pymdownx.magiclink
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+  - fontawesome_markdown
+extra:
+  social:
+    - icon: 'fontawesome/brands/github-alt'
+      link: 'https://github.ibm.com/dbakuna/terraform-provider-opentoolchain'
