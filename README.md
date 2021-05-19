@@ -6,6 +6,8 @@
 
 Check `examples` folder for working examples
 
+[documentation (WIP)](https://pages.github.ibm.com/dbakuna/terraform-provider-opentoolchain/)
+
 ## Development
 
 ### Requirements
