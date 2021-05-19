@@ -47,8 +47,10 @@ func Provider() *schema.Provider {
 				Default:     3,
 			},
 		},
-		ResourcesMap:         map[string]*schema.Resource{},
-		DataSourcesMap:       map[string]*schema.Resource{},
+		ResourcesMap: map[string]*schema.Resource{},
+		DataSourcesMap: map[string]*schema.Resource{
+			"opentoolchain_toolchain": dataSourceOpenToolchainToolchain(),
+		},
 		ConfigureContextFunc: providerConfigure,
 	}
 }
