@@ -6,9 +6,9 @@ import (
 	"path"
 
 	"github.com/IBM/go-sdk-core/core"
+	oc "github.com/dariusbakunas/opentoolchain-go-sdk/opentoolchainv1"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	oc "github.ibm.com/dbakuna/opentoolchain-go-sdk/opentoolchainv1"
 )
 
 func Provider() *schema.Provider {

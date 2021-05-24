@@ -6,8 +6,6 @@
 
 Check `examples` folder for working examples
 
-[documentation (WIP)](https://pages.github.ibm.com/dbakuna/terraform-provider-opentoolchain/)
-
 ## Development
 
 ### Requirements
@@ -20,7 +18,7 @@ Check `examples` folder for working examples
 First, clone the repository:
 
 ```bash
-git clone git@github.ibm.com:dbakuna/terraform-provider-opentoolchain.git
+git clone git@github.com:dariusbakunas/terraform-provider-opentoolchain.git
 ```
 
 To compile the provider, run make build. This will build the provider and put the provider binary in the current directory.
