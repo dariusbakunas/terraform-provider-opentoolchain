@@ -1,6 +1,6 @@
 site_name: Terraform Provider for Open Toolchain
 repo_name: 'dbakuna/terraform-provider-opentoolchain'
-repo_url: 'https://github.ibm.com/dbakuna/terraform-provider-opentoolchain'
+repo_url: 'https://github.com/dariusbakunas/terraform-provider-opentoolchain'
 
 theme:
   name: 'material'
@@ -39,4 +39,4 @@ markdown_extensions:
 extra:
   social:
     - icon: 'fontawesome/brands/github-alt'
-      link: 'https://github.ibm.com/dbakuna/terraform-provider-opentoolchain'
+      link: 'https://github.com/dariusbakunas/terraform-provider-opentoolchain'
