@@ -2,11 +2,14 @@ package opentoolchain
 
 import (
 	"context"
+	"net/http"
 	"net/url"
 	"path"
 
 	"github.com/IBM/go-sdk-core/core"
+	// v5core "github.com/IBM/go-sdk-core/v5/core"
 	oc "github.com/dariusbakunas/opentoolchain-go-sdk/opentoolchainv1"
+	cleanhttp "github.com/hashicorp/go-cleanhttp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -47,7 +50,9 @@ func Provider() *schema.Provider {
 				Default:     3,
 			},
 		},
-		ResourcesMap: map[string]*schema.Resource{},
+		ResourcesMap: map[string]*schema.Resource{
+			"opentoolchain_toolchain": resourceOpenToolchainToolchain(),
+		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"opentoolchain_toolchain": dataSourceOpenToolchainToolchain(),
 		},
@@ -102,7 +107,18 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 		return nil, diag.FromErr(err)
 	}
 
-	client.EnableRetries(d.Get("api_max_retry").(int), 0) // 0 delay - using client defaults
+	// have to disable redirects, toolchain creation redirects to toolchain page
+	httpClient := cleanhttp.DefaultPooledClient()
+	httpClient.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		return http.ErrUseLastResponse
+	}
+
+	// v5core.GetLogger().SetLogLevel(v5core.LevelDebug)
+
+	client.Service.Client = httpClient
+
+	// do not allow retries for reason above
+	//client.EnableRetries(d.Get("api_max_retry").(int), 0) // 0 delay - using client defaults
 
 	return client, diags
 }
