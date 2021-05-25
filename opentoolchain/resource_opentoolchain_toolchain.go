@@ -104,8 +104,11 @@ func resourceOpenToolchainToolchainCreate(ctx context.Context, d *schema.Resourc
 	resp, err := c.CreateToolchainWithContext(ctx, input)
 
 	if err != nil && resp.StatusCode != 302 {
-		// log.Printf("[DEBUG] err: %s", dbgPrint(resp))
-		return diag.Errorf("Error creating toolchain: %s", err)
+		if result, ok := resp.GetResultAsMap(); ok {
+			return diag.Errorf("Error creating toolchain: %s - %s", err, result["description"])
+		} else {
+			return diag.Errorf("Error creating toolchain: %s", err)
+		}
 	}
 
 	location := resp.Headers.Get("Location")
