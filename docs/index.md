@@ -13,7 +13,7 @@ The OpenToolchain provider provides resources to interact with a IBM OpenToolcha
 
 ```terraform
 provider "opentoolchain" {  
-    iam_access_token = var.iam_access_token    
+    iam_access_token = var.iam_access_token
 }
 ```
 

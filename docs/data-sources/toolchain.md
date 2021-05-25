@@ -35,32 +35,7 @@ data "opentoolchain_toolchain" "tc" {
 
 - **description** (String) Toolchain description
 - **key** (String) Toolchain key
-- **lifecycle_messaging_webhook_id** (String)
 - **name** (String) Toolchain name
-- **services** (List of Object) (see [below for nested schema](#nestedatt--services))
-- **tags** (List of String)
-- **template** (List of Object) (see [below for nested schema](#nestedatt--template))
-
-<a id="nestedatt--services"></a>
-### Nested Schema for `services`
-
-Read-Only:
-
-- **broker_id** (String)
-- **service_id** (String)
-
-
-<a id="nestedatt--template"></a>
-### Nested Schema for `template`
-
-Read-Only:
-
-- **getting_started** (String)
-- **locale** (String)
-- **name** (String)
-- **services_total** (Number)
-- **source** (String)
-- **type** (String)
-- **url** (String)
+- **template_repository** (String) The Git repository that the template will be read from
 
 

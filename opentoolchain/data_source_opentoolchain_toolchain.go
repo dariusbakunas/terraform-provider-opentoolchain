@@ -38,69 +38,74 @@ func dataSourceOpenToolchainToolchain() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"template": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"getting_started": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"services_total": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"url": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"source": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"locale": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
+			"template_repository": {
+				Description: "The Git repository that the template will be read from",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
-			"services": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"broker_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"service_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"tags": {
-				Type: schema.TypeList,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-				Computed: true,
-			},
-			"lifecycle_messaging_webhook_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+			// "template": {
+			// 	Type:     schema.TypeList,
+			// 	Computed: true,
+			// 	Elem: &schema.Resource{
+			// 		Schema: map[string]*schema.Schema{
+			// 			"getting_started": {
+			// 				Type:     schema.TypeString,
+			// 				Computed: true,
+			// 			},
+			// 			"services_total": {
+			// 				Type:     schema.TypeInt,
+			// 				Computed: true,
+			// 			},
+			// 			"name": {
+			// 				Type:     schema.TypeString,
+			// 				Computed: true,
+			// 			},
+			// 			"type": {
+			// 				Type:     schema.TypeString,
+			// 				Computed: true,
+			// 			},
+			// 			"url": {
+			// 				Type:     schema.TypeString,
+			// 				Computed: true,
+			// 			},
+			// 			"source": {
+			// 				Type:     schema.TypeString,
+			// 				Computed: true,
+			// 			},
+			// 			"locale": {
+			// 				Type:     schema.TypeString,
+			// 				Computed: true,
+			// 			},
+			// 		},
+			// 	},
+			// },
+			// "services": {
+			// 	Type:     schema.TypeList,
+			// 	Computed: true,
+			// 	Elem: &schema.Resource{
+			// 		Schema: map[string]*schema.Schema{
+			// 			"broker_id": {
+			// 				Type:     schema.TypeString,
+			// 				Computed: true,
+			// 			},
+			// 			"service_id": {
+			// 				Type:     schema.TypeString,
+			// 				Computed: true,
+			// 			},
+			// 		},
+			// 	},
+			// },
+			// "tags": {
+			// 	Type: schema.TypeList,
+			// 	Elem: &schema.Schema{
+			// 		Type: schema.TypeString,
+			// 	},
+			// 	Computed: true,
+			// },
+			// "lifecycle_messaging_webhook_id": {
+			// 	Type:     schema.TypeString,
+			// 	Computed: true,
+			// },
 		},
 	}
 }
@@ -127,10 +132,15 @@ func dataSourceOpenToolchainToolchainRead(ctx context.Context, d *schema.Resourc
 	d.Set("name", *toolchain.Name)
 	d.Set("description", *toolchain.Description)
 	d.Set("key", *toolchain.Key)
-	d.Set("template", flattenToolchainTemplate(toolchain.Template))
-	d.Set("services", flattenToolchainServices(toolchain.Services))
-	d.Set("tags", toolchain.Tags)
-	d.Set("lifecycle_messaging_webhook_id", *toolchain.LifecycleMessagingWebhookID)
+	//d.Set("template", flattenToolchainTemplate(toolchain.Template))
+
+	if toolchain.Template != nil && toolchain.Template.URL != nil {
+		d.Set("template_repository", *toolchain.Template.URL)
+	}
+
+	// d.Set("services", flattenToolchainServices(toolchain.Services))
+	// d.Set("tags", toolchain.Tags)
+	// d.Set("lifecycle_messaging_webhook_id", *toolchain.LifecycleMessagingWebhookID)
 
 	d.SetId(*toolchain.ToolchainGUID)
 	return diags
