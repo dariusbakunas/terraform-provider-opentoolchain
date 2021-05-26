@@ -6,6 +6,7 @@ go 1.15
 
 require (
 	github.com/IBM/go-sdk-core v1.1.0
+	github.com/apparentlymart/go-cidr v1.1.0 // indirect
 	github.com/aws/aws-sdk-go v1.37.0 // indirect
 	github.com/dariusbakunas/opentoolchain-go-sdk v0.0.0-20210525153040-d0425b03e168
 	github.com/hashicorp/go-cleanhttp v0.5.2

@@ -13,6 +13,8 @@ var testAccProvider *schema.Provider
 
 var resourceGroupID string
 
+const testResourcePrefix = "tf_acc_test"
+
 func init() {
 	resourceGroupID = os.Getenv("RESOURCE_GROUP_ID")
 	if resourceGroupID == "" {
