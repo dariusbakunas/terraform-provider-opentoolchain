@@ -22,14 +22,14 @@ func Provider() *schema.Provider {
 				Description: "The IBM Cloud IAM api key used to retrieve IAM access token if `iam_access_token` is not specified",
 				Optional:    true,
 				Sensitive:   true,
-				DefaultFunc: schema.EnvDefaultFunc("IAM_API_KEY", nil),
+				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"IC_API_KEY", "IBMCLOUD_API_KEY", "IAM_API_KEY"}, nil),
 			},
 			"iam_access_token": {
 				Type:        schema.TypeString,
 				Description: "The IBM Cloud Identity and Access Management token used to access Open Toolchain APIs",
 				Optional:    true,
 				Sensitive:   true,
-				DefaultFunc: schema.EnvDefaultFunc("IAM_ACCESS_TOKEN", nil),
+				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"IC_IAM_TOKEN", "IBMCLOUD_IAM_TOKEN", "IAM_ACCESS_TOKEN"}, nil),
 			},
 			"base_url": {
 				Type:        schema.TypeString,
@@ -43,12 +43,12 @@ func Provider() *schema.Provider {
 				Description: "IBM IAM base URL",
 				Default:     "https://iam.cloud.ibm.com",
 			},
-			"api_max_retry": {
-				Description: "Maximum number of retries for AppID api requests, set to 0 to disable",
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     3,
-			},
+			// "api_max_retry": {
+			// 	Description: "Maximum number of retries for AppID api requests, set to 0 to disable",
+			// 	Type:        schema.TypeInt,
+			// 	Optional:    true,
+			// 	Default:     3,
+			// },
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"opentoolchain_toolchain": resourceOpenToolchainToolchain(),
