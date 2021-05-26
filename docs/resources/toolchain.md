@@ -45,6 +45,7 @@ resource "opentoolchain_toolchain" "tc" {
 ### Optional
 
 - **id** (String) The ID of this resource.
+- **name** (String) Toolchain name
 - **template_branch** (String) The Git branch name that the template will be read from
 - **template_properties** (Map of String) Additional properties that are used by the template
 - **template_repository** (String) The Git repository that the template will be read from
@@ -54,6 +55,5 @@ resource "opentoolchain_toolchain" "tc" {
 - **description** (String) Toolchain description
 - **guid** (String) The toolchain `guid`
 - **key** (String) Toolchain key
-- **name** (String) Toolchain name
 
 
