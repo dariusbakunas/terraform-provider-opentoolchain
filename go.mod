@@ -11,7 +11,6 @@ require (
 	github.com/dariusbakunas/opentoolchain-go-sdk v0.0.0-20210526150908-68c5027b1eeb
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/hashicorp/hcl/v2 v2.8.2 // indirect
-	github.com/hashicorp/terraform-plugin-docs v0.4.0 // indirect
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.6.1
 	github.com/mattn/go-colorable v0.1.8 // indirect
 	google.golang.org/api v0.34.0 // indirect
