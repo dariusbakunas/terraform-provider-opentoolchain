@@ -124,7 +124,7 @@ func dataSourceOpenToolchainToolchainRead(ctx context.Context, d *schema.Resourc
 	})
 
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.Errorf("Error reading toolchain: %s", err)
 	}
 
 	log.Printf("[DEBUG] Read toolchain: %+v", toolchain)
