@@ -8,6 +8,7 @@ import (
 	oc "github.com/dariusbakunas/opentoolchain-go-sdk/opentoolchainv1"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceOpenToolchainToolchain() *schema.Resource {
@@ -15,7 +16,7 @@ func resourceOpenToolchainToolchain() *schema.Resource {
 		CreateContext: resourceOpenToolchainToolchainCreate,
 		ReadContext:   dataSourceOpenToolchainToolchainRead, // reusing data source read, same schema
 		DeleteContext: resourceOpenToolchainToolchainDelete,
-		//UpdateContext: resourceOpenToolchainToolchainUpdate, // for now, no update support
+		UpdateContext: resourceOpenToolchainToolchainUpdate,
 		Schema: map[string]*schema.Schema{
 			"guid": {
 				Description: "The toolchain `guid`",
@@ -48,9 +49,11 @@ func resourceOpenToolchainToolchain() *schema.Resource {
 				ForceNew:    true,
 			},
 			"name": {
-				Description: "Toolchain name",
-				Type:        schema.TypeString,
-				Computed:    true,
+				Description:  "Toolchain name",
+				Type:         schema.TypeString,
+				Computed:     true,
+				Optional:     true,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9-,._]+$`), "must contain only letters, numbers, hyphens, ',', '.' or '_'"),
 			},
 			"description": {
 				Description: "Toolchain description",
@@ -104,6 +107,7 @@ func resourceOpenToolchainToolchainCreate(ctx context.Context, d *schema.Resourc
 	resp, err := c.CreateToolchainWithContext(ctx, input)
 
 	if err != nil && resp.StatusCode != 302 {
+		log.Printf("[DEBUG] resp: %s", dbgPrint(resp))
 		if result, ok := resp.GetResultAsMap(); ok {
 			return diag.Errorf("Error creating toolchain: %s - %s", err, result["description"])
 		} else {
@@ -119,6 +123,32 @@ func resourceOpenToolchainToolchainCreate(ctx context.Context, d *schema.Resourc
 
 	guid := extractGuid(location)
 	d.Set("guid", guid)
+
+	if name, ok := d.GetOk("name"); ok {
+		// name was specified, try to use patch method to update it
+		_, err := c.PatchToolchainWithContext(ctx, &oc.PatchToolchainOptions{
+			EnvID: &envID,
+			GUID:  &guid,
+			Name:  getStringPtr(name.(string)),
+		})
+
+		if err != nil {
+			log.Printf("[WARN] Failed to update toolchain name: %s", err)
+
+			// try to cleanup
+			_, deleteErr := c.DeleteToolchainWithContext(ctx, &oc.DeleteToolchainOptions{
+				EnvID: getStringPtr(envID),
+				GUID:  getStringPtr(guid),
+			})
+
+			if deleteErr != nil {
+				return diag.Errorf("Failed to update toolchain name, unable to cleanup: %s", deleteErr)
+			}
+
+			return diag.Errorf("Failed to update toolchain name: %s", err)
+		}
+	}
+
 	return dataSourceOpenToolchainToolchainRead(ctx, d, m)
 }
 
@@ -153,4 +183,26 @@ func resourceOpenToolchainToolchainDelete(ctx context.Context, d *schema.Resourc
 	}
 
 	return diags
+}
+
+func resourceOpenToolchainToolchainUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	envID := d.Get("env_id").(string)
+	guid := d.Get("guid").(string)
+	c := m.(*oc.OpenToolchainV1)
+
+	if d.HasChange("name") {
+		name := d.Get("name")
+
+		_, err := c.PatchToolchainWithContext(ctx, &oc.PatchToolchainOptions{
+			EnvID: &envID,
+			GUID:  &guid,
+			Name:  getStringPtr(name.(string)),
+		})
+
+		if err != nil {
+			return diag.Errorf("Error updating toolchain nane: %s", err)
+		}
+	}
+
+	return dataSourceOpenToolchainToolchainRead(ctx, d, m)
 }
