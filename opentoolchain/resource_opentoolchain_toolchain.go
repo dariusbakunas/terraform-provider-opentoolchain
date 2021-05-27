@@ -96,9 +96,19 @@ func resourceOpenToolchainToolchainCreate(ctx context.Context, d *schema.Resourc
 
 	if tplProps, ok := d.GetOk("template_properties"); ok {
 		props := tplProps.(map[string]interface{})
+		reserved := map[string]bool{
+			"env_id":              true,
+			"autocreate":          true,
+			"template_repository": true,
+			"template_branch":     true,
+			"resource_group_id":   true,
+			"name":                true,
+		}
 
 		for k, v := range props {
-			input.SetProperty(k, v)
+			if !reserved[k] {
+				input.SetProperty(k, v)
+			}
 		}
 	}
 
@@ -108,7 +118,17 @@ func resourceOpenToolchainToolchainCreate(ctx context.Context, d *schema.Resourc
 
 	if err != nil && resp.StatusCode != 302 {
 		if result, ok := resp.GetResultAsMap(); ok {
-			return diag.Errorf("Error creating toolchain: %s - %s", err, result["description"])
+			errDetails := ""
+
+			if description, ok := result["description"]; ok {
+				errDetails = description.(string)
+			}
+
+			if details, ok := result["details"]; ok {
+				errDetails = errDetails + " " + details.(string)
+			}
+
+			return diag.Errorf("Error creating toolchain: %s - %s", err, errDetails)
 		} else {
 			return diag.Errorf("Error creating toolchain: %s", err)
 		}
