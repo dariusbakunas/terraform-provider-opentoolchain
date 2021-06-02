@@ -55,5 +55,6 @@ resource "opentoolchain_toolchain" "tc" {
 - **description** (String) Toolchain description
 - **guid** (String) The toolchain `guid`
 - **key** (String) Toolchain key
+- **url** (String) Toolchain URL
 
 

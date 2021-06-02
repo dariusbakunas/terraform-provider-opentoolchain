@@ -37,5 +37,6 @@ data "opentoolchain_toolchain" "tc" {
 - **key** (String) Toolchain key
 - **name** (String) Toolchain name
 - **template_repository** (String) The Git repository that the template will be read from
+- **url** (String) Toolchain URL
 
 
