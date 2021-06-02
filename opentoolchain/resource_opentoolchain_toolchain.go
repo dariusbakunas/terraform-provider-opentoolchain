@@ -74,6 +74,11 @@ func resourceOpenToolchainToolchain() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"url": {
+				Description: "Toolchain URL",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 		},
 	}
 }

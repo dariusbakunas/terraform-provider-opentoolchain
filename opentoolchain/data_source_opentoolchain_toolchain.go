@@ -2,7 +2,10 @@ package opentoolchain
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"net/url"
+	"path"
 
 	oc "github.com/dariusbakunas/opentoolchain-go-sdk/opentoolchainv1"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -40,6 +43,11 @@ func dataSourceOpenToolchainToolchain() *schema.Resource {
 			},
 			"template_repository": {
 				Description: "The Git repository that the template will be read from",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"url": {
+				Description: "Toolchain URL",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -142,6 +150,15 @@ func dataSourceOpenToolchainToolchainRead(ctx context.Context, d *schema.Resourc
 	// d.Set("tags", toolchain.Tags)
 	// d.Set("lifecycle_messaging_webhook_id", *toolchain.LifecycleMessagingWebhookID)
 
+	u, err := url.Parse(c.GetServiceURL())
+
+	if err != nil {
+		return diag.Errorf("Unable to parse base service url: %s", err)
+	}
+
+	u.Path = path.Join(u.Path, fmt.Sprintf("/devops/toolchains/%s", *toolchain.ToolchainGUID))
+
+	d.Set("url", fmt.Sprintf("%s?env_id=%s", u.String(), envID))
 	d.SetId(*toolchain.ToolchainGUID)
 	return diags
 }
