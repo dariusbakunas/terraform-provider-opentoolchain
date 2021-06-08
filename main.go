@@ -1,6 +1,10 @@
 package main
 
 import (
+	"context"
+	"flag"
+	"log"
+
 	"github.com/dariusbakunas/terraform-provider-opentoolchain/opentoolchain"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
@@ -9,9 +13,24 @@ import (
 //go:generate go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
 
 func main() {
-	plugin.Serve(&plugin.ServeOpts{
+	var debugMode bool
+
+	flag.BoolVar(&debugMode, "debug", false, "set to true to run the provider with support for debuggers like delve")
+	flag.Parse()
+
+	opts := &plugin.ServeOpts{
 		ProviderFunc: func() *schema.Provider {
 			return opentoolchain.Provider()
 		},
-	})
+	}
+
+	if debugMode {
+		err := plugin.Debug(context.Background(), "dariusbakunas/opentoolchain", opts)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+		return
+	}
+
+	plugin.Serve(opts)
 }
