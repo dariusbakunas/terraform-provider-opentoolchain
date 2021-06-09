@@ -2,9 +2,13 @@ package opentoolchain
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"net/url"
+	"path"
 	"regexp"
 
+	"github.com/IBM/platform-services-go-sdk/globaltaggingv1"
 	oc "github.com/dariusbakunas/opentoolchain-go-sdk/opentoolchainv1"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -14,7 +18,7 @@ import (
 func resourceOpenToolchainToolchain() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceOpenToolchainToolchainCreate,
-		ReadContext:   dataSourceOpenToolchainToolchainRead, // reusing data source read, same schema
+		ReadContext:   resourceOpenToolchainToolchainRead, // reusing data source read, same schema
 		DeleteContext: resourceOpenToolchainToolchainDelete,
 		UpdateContext: resourceOpenToolchainToolchainUpdate,
 		Schema: map[string]*schema.Schema{
@@ -22,6 +26,10 @@ func resourceOpenToolchainToolchain() *schema.Resource {
 				Description: "The toolchain `guid`",
 				Type:        schema.TypeString,
 				Computed:    true,
+			},
+			"crn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"env_id": {
 				Description: "Environment ID, example: `ibm:yp:us-south`",
@@ -79,8 +87,54 @@ func resourceOpenToolchainToolchain() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"tags": {
+				Type: schema.TypeSet,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Optional: true,
+			},
 		},
 	}
+}
+
+func resourceOpenToolchainToolchainRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	guid := d.Id()
+	envID := d.Get("env_id").(string)
+
+	config := m.(*ProviderConfig)
+	c := config.OTClient
+
+	toolchain, _, err := c.GetToolchainWithContext(ctx, &oc.GetToolchainOptions{
+		GUID:  getStringPtr(guid),
+		EnvID: getStringPtr(envID),
+	})
+
+	if err != nil {
+		return diag.Errorf("Error reading toolchain: %s", err)
+	}
+
+	log.Printf("[DEBUG] Read toolchain: %+v", toolchain)
+
+	d.Set("name", *toolchain.Name)
+	d.Set("description", *toolchain.Description)
+	d.Set("key", *toolchain.Key)
+	d.Set("crn", *toolchain.CRN)
+	//d.Set("template", flattenToolchainTemplate(toolchain.Template))
+	// d.Set("lifecycle_messaging_webhook_id", *toolchain.LifecycleMessagingWebhookID)
+
+	u, err := url.Parse(c.GetServiceURL())
+
+	if err != nil {
+		return diag.Errorf("Unable to parse base service url: %s", err)
+	}
+
+	u.Path = path.Join(u.Path, fmt.Sprintf("/devops/toolchains/%s", *toolchain.ToolchainGUID))
+
+	d.Set("url", fmt.Sprintf("%s?env_id=%s", u.String(), envID))
+	return diags
 }
 
 func resourceOpenToolchainToolchainCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -93,7 +147,9 @@ func resourceOpenToolchainToolchainCreate(ctx context.Context, d *schema.Resourc
 		ResourceGroupID: getStringPtr(d.Get("resource_group_id").(string)),
 	}
 
-	c := m.(*oc.OpenToolchainV1)
+	config := m.(*ProviderConfig)
+	c := config.OTClient
+	t := config.TagClient
 
 	if branch, ok := d.GetOk("template_branch"); ok {
 		input.Branch = getStringPtr(branch.(string))
@@ -147,6 +203,7 @@ func resourceOpenToolchainToolchainCreate(ctx context.Context, d *schema.Resourc
 
 	guid := extractGuid(location)
 	d.Set("guid", guid)
+	d.SetId(guid)
 
 	if name, ok := d.GetOk("name"); ok {
 		// name was specified, try to use patch method to update it
@@ -173,7 +230,49 @@ func resourceOpenToolchainToolchainCreate(ctx context.Context, d *schema.Resourc
 		}
 	}
 
-	return dataSourceOpenToolchainToolchainRead(ctx, d, m)
+	tags := expandStringList(d.Get("tags").(*schema.Set).List())
+	crn, err := getCRN(ctx, d, m)
+
+	if err != nil {
+		return diag.Errorf("Error reading toolchain CRN: %s", err)
+	}
+
+	if len(tags) > 0 {
+		log.Printf("[DEBUG] Setting toolchain tags: %v, %s", tags, crn)
+		_, resp, err = t.AttachTagWithContext(ctx, &globaltaggingv1.AttachTagOptions{
+			Resources: []globaltaggingv1.Resource{
+				{ResourceID: getStringPtr(crn)},
+			},
+			TagNames: tags,
+		})
+
+		if err != nil {
+			log.Printf("[DEBUG] Error setting toolchain tags: %s", resp)
+			return diag.Errorf("Error setting toolchain tags: %s", err)
+		}
+	}
+
+	return resourceOpenToolchainToolchainRead(ctx, d, m)
+}
+
+func getCRN(ctx context.Context, d *schema.ResourceData, m interface{}) (string, error) {
+	guid := d.Get("guid").(string)
+	envID := d.Get("env_id").(string)
+
+	config := m.(*ProviderConfig)
+	c := config.OTClient
+
+	toolchain, _, err := c.GetToolchainWithContext(ctx, &oc.GetToolchainOptions{
+		GUID:  getStringPtr(guid),
+		EnvID: getStringPtr(envID),
+	})
+
+	if err != nil {
+		return "", err
+	}
+
+	log.Printf("[DEBUG] Read toolchain: %+v", toolchain)
+	return *toolchain.CRN, nil
 }
 
 func extractGuid(location string) string {
@@ -193,7 +292,8 @@ func resourceOpenToolchainToolchainDelete(ctx context.Context, d *schema.Resourc
 
 	envID := d.Get("env_id").(string)
 	guid := d.Get("guid").(string)
-	c := m.(*oc.OpenToolchainV1)
+	config := m.(*ProviderConfig)
+	c := config.OTClient
 
 	log.Printf("[DEBUG] Deleting toolchain: %s", d.Id())
 
@@ -212,7 +312,11 @@ func resourceOpenToolchainToolchainDelete(ctx context.Context, d *schema.Resourc
 func resourceOpenToolchainToolchainUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	envID := d.Get("env_id").(string)
 	guid := d.Get("guid").(string)
-	c := m.(*oc.OpenToolchainV1)
+	crn := d.Get("crn").(string)
+
+	config := m.(*ProviderConfig)
+	c := config.OTClient
+	t := config.TagClient
 
 	if d.HasChange("name") {
 		name := d.Get("name")
@@ -228,5 +332,73 @@ func resourceOpenToolchainToolchainUpdate(ctx context.Context, d *schema.Resourc
 		}
 	}
 
-	return dataSourceOpenToolchainToolchainRead(ctx, d, m)
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		oldTags := expandStringList(o.(*schema.Set).List())
+		newTags := expandStringList(n.(*schema.Set).List())
+
+		removed, added := sliceDiff(oldTags, newTags)
+
+		if len(added) > 0 {
+			log.Printf("[DEBUG] Adding toolchain tags: %v, %s", added, crn)
+			_, resp, err := t.AttachTagWithContext(ctx, &globaltaggingv1.AttachTagOptions{
+				Resources: []globaltaggingv1.Resource{
+					{ResourceID: getStringPtr(crn)},
+				},
+				TagNames: added,
+			})
+
+			if err != nil {
+				log.Printf("[DEBUG] Error setting toolchain tags: %s", resp)
+				return diag.Errorf("Error setting toolchain tags: %s", err)
+			}
+		}
+
+		if len(removed) > 0 {
+			log.Printf("[DEBUG] Removing toolchain tags: %v, %s", removed, crn)
+			_, resp, err := t.DetachTagWithContext(ctx, &globaltaggingv1.DetachTagOptions{
+				Resources: []globaltaggingv1.Resource{
+					{ResourceID: getStringPtr(crn)},
+				},
+				TagNames: removed,
+			})
+
+			if err != nil {
+				log.Printf("[DEBUG] Error setting toolchain tags: %s", resp)
+				return diag.Errorf("Error setting toolchain tags: %s", err)
+			}
+		}
+
+		d.Set("tags", newTags)
+	}
+
+	return resourceOpenToolchainToolchainRead(ctx, d, m)
+}
+
+func sliceDiff(o, n []string) (removed, added []string) {
+	oMap := make(map[string]bool)
+	nMap := make(map[string]bool)
+
+	for _, v := range o {
+		oMap[v] = true
+	}
+
+	for _, v := range n {
+		nMap[v] = true
+	}
+
+	for _, v := range n {
+		if !oMap[v] {
+			added = append(added, v)
+		}
+	}
+
+	for _, v := range o {
+		if !nMap[v] {
+			removed = append(removed, v)
+		}
+	}
+
+	return
 }

@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"path"
 
+	"github.com/IBM/platform-services-go-sdk/globaltaggingv1"
 	oc "github.com/dariusbakunas/opentoolchain-go-sdk/opentoolchainv1"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -20,6 +21,10 @@ func dataSourceOpenToolchainToolchain() *schema.Resource {
 				Description: "The toolchain `guid`",
 				Type:        schema.TypeString,
 				Required:    true,
+			},
+			"crn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"env_id": {
 				Description: "Environment ID, example: `ibm:yp:us-south`",
@@ -103,13 +108,13 @@ func dataSourceOpenToolchainToolchain() *schema.Resource {
 			// 		},
 			// 	},
 			// },
-			// "tags": {
-			// 	Type: schema.TypeList,
-			// 	Elem: &schema.Schema{
-			// 		Type: schema.TypeString,
-			// 	},
-			// 	Computed: true,
-			// },
+			"tags": {
+				Type: schema.TypeSet,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Computed: true,
+			},
 			// "lifecycle_messaging_webhook_id": {
 			// 	Type:     schema.TypeString,
 			// 	Computed: true,
@@ -124,7 +129,9 @@ func dataSourceOpenToolchainToolchainRead(ctx context.Context, d *schema.Resourc
 	guid := d.Get("guid").(string)
 	envID := d.Get("env_id").(string)
 
-	c := m.(*oc.OpenToolchainV1)
+	config := m.(*ProviderConfig)
+	c := config.OTClient
+	t := config.TagClient
 
 	toolchain, _, err := c.GetToolchainWithContext(ctx, &oc.GetToolchainOptions{
 		GUID:  getStringPtr(guid),
@@ -140,14 +147,32 @@ func dataSourceOpenToolchainToolchainRead(ctx context.Context, d *schema.Resourc
 	d.Set("name", *toolchain.Name)
 	d.Set("description", *toolchain.Description)
 	d.Set("key", *toolchain.Key)
+	d.Set("crn", *toolchain.CRN)
 	//d.Set("template", flattenToolchainTemplate(toolchain.Template))
 
 	if toolchain.Template != nil && toolchain.Template.URL != nil {
 		d.Set("template_repository", *toolchain.Template.URL)
 	}
 
+	listTagsOptions := &globaltaggingv1.ListTagsOptions{
+		AttachedTo: toolchain.CRN,
+	}
+
+	log.Printf("[DEBUG] Getting toolchain tags: %+v", toolchain)
+	tagList, _, err := t.ListTagsWithContext(ctx, listTagsOptions)
+
+	if err != nil {
+		return diag.Errorf("Error reading toolchain tags: %s", err)
+	}
+
+	var tags []string
+
+	for _, tag := range tagList.Items {
+		tags = append(tags, *tag.Name)
+	}
+
 	// d.Set("services", flattenToolchainServices(toolchain.Services))
-	// d.Set("tags", toolchain.Tags)
+	d.Set("tags", tags)
 	// d.Set("lifecycle_messaging_webhook_id", *toolchain.LifecycleMessagingWebhookID)
 
 	u, err := url.Parse(c.GetServiceURL())

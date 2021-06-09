@@ -8,11 +8,17 @@ import (
 
 	"github.com/IBM/go-sdk-core/core"
 	// v5core "github.com/IBM/go-sdk-core/v5/core"
+	"github.com/IBM/platform-services-go-sdk/globaltaggingv1"
 	oc "github.com/dariusbakunas/opentoolchain-go-sdk/opentoolchainv1"
 	cleanhttp "github.com/hashicorp/go-cleanhttp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+type ProviderConfig struct {
+	OTClient  *oc.OpenToolchainV1
+	TagClient *globaltaggingv1.GlobalTaggingV1
+}
 
 func Provider() *schema.Provider {
 	return &schema.Provider{
@@ -36,6 +42,12 @@ func Provider() *schema.Provider {
 				Optional:    true,
 				Description: "Open Toolchain API base URL (for example 'https://cloud.ibm.com')",
 				Default:     "https://cloud.ibm.com",
+			},
+			"tags_base_url": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Global Tagging service base URL",
+				Default:     "https://tags.global-search-tagging.cloud.ibm.com",
 			},
 			"iam_base_url": {
 				Type:        schema.TypeString,
@@ -72,8 +84,12 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 		iamAccessToken = accessToken.(string)
 	}
 
-	options := &oc.OpenToolchainV1Options{
+	otClientOptions := &oc.OpenToolchainV1Options{
 		URL: d.Get("base_url").(string),
+	}
+
+	tagClientOptions := &globaltaggingv1.GlobalTaggingV1Options{
+		URL: d.Get("tags_base_url").(string),
 	}
 
 	if iamAccessToken == "" {
@@ -91,17 +107,21 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 
 		u.Path = path.Join(u.Path, "/identity/token")
 
-		options.Authenticator = &core.IamAuthenticator{
+		otClientOptions.Authenticator = &core.IamAuthenticator{
 			ApiKey: iamApiKey,
 			URL:    u.String(),
 		}
+
+		tagClientOptions.Authenticator = otClientOptions.Authenticator
 	} else {
-		options.Authenticator = &core.BearerTokenAuthenticator{
+		otClientOptions.Authenticator = &core.BearerTokenAuthenticator{
 			BearerToken: iamAccessToken,
 		}
+
+		tagClientOptions.Authenticator = otClientOptions.Authenticator
 	}
 
-	client, err := oc.NewOpenToolchainV1(options)
+	otClient, err := oc.NewOpenToolchainV1(otClientOptions)
 
 	if err != nil {
 		return nil, diag.FromErr(err)
@@ -115,10 +135,19 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 
 	// v5core.GetLogger().SetLogLevel(v5core.LevelDebug)
 
-	client.Service.Client = httpClient
+	otClient.Service.Client = httpClient
 
 	// do not allow retries for reason above
 	//client.EnableRetries(d.Get("api_max_retry").(int), 0) // 0 delay - using client defaults
 
-	return client, diags
+	tagClient, err := globaltaggingv1.NewGlobalTaggingV1(tagClientOptions)
+
+	if err != nil {
+		return nil, diag.FromErr(err)
+	}
+
+	return &ProviderConfig{
+		OTClient:  otClient,
+		TagClient: tagClient,
+	}, diags
 }
