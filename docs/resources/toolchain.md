@@ -18,6 +18,7 @@ resource "opentoolchain_toolchain" "tc" {
   resource_group_id   = "<resource group id>"
   template_repository = "https://github.ibm.com/whc-toolchain/whc-developer-toolchain-CI"
   template_branch = "stable-3.3.3"
+  tags = ["dev", "tf"]
   template_properties = {
     repository_token = var.git_api_key
     "toolchain.name" = "TEST"
@@ -46,12 +47,14 @@ resource "opentoolchain_toolchain" "tc" {
 
 - **id** (String) The ID of this resource.
 - **name** (String) Toolchain name
+- **tags** (Set of String)
 - **template_branch** (String) The Git branch name that the template will be read from
 - **template_properties** (Map of String) Additional properties that are used by the template
 - **template_repository** (String) The Git repository that the template will be read from
 
 ### Read-Only
 
+- **crn** (String)
 - **description** (String) Toolchain description
 - **guid** (String) The toolchain `guid`
 - **key** (String) Toolchain key

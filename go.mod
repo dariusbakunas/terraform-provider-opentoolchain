@@ -7,7 +7,7 @@ go 1.15
 require (
 	github.com/IBM/go-sdk-core v1.1.0
 	github.com/IBM/go-sdk-core/v5 v5.5.0 // indirect
-	github.com/IBM/platform-services-go-sdk v0.18.15 // indirect
+	github.com/IBM/platform-services-go-sdk v0.18.15
 	github.com/apparentlymart/go-cidr v1.1.0 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
 	github.com/aws/aws-sdk-go v1.37.0 // indirect
@@ -22,7 +22,6 @@ require (
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/mattn/go-colorable v0.1.8 // indirect
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
-	github.com/satori/go.uuid v1.2.0 // indirect
 	go.mongodb.org/mongo-driver v1.5.3 // indirect
 	google.golang.org/api v0.34.0 // indirect
 )
