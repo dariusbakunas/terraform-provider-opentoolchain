@@ -6,6 +6,7 @@
 
 Check `examples` folder for working examples
 
+[documentation](https://registry.terraform.io/providers/dariusbakunas/opentoolchain/latest/docs)
 ## Development
 
 ### Requirements
