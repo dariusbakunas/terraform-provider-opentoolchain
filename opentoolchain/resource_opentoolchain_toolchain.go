@@ -18,7 +18,7 @@ import (
 func resourceOpenToolchainToolchain() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceOpenToolchainToolchainCreate,
-		ReadContext:   resourceOpenToolchainToolchainRead, // reusing data source read, same schema
+		ReadContext:   resourceOpenToolchainToolchainRead,
 		DeleteContext: resourceOpenToolchainToolchainDelete,
 		UpdateContext: resourceOpenToolchainToolchainUpdate,
 		Schema: map[string]*schema.Schema{
@@ -87,6 +87,33 @@ func resourceOpenToolchainToolchain() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"services": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"broker_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"service_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"instance_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"parameters": {
+							Type: schema.TypeMap,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+							Computed: true,
+						},
+					},
+				},
+			},
 			"tags": {
 				Type: schema.TypeSet,
 				Elem: &schema.Schema{
@@ -122,6 +149,7 @@ func resourceOpenToolchainToolchainRead(ctx context.Context, d *schema.ResourceD
 	d.Set("description", *toolchain.Description)
 	d.Set("key", *toolchain.Key)
 	d.Set("crn", *toolchain.CRN)
+	d.Set("services", flattenToolchainServices(toolchain.Services))
 	//d.Set("template", flattenToolchainTemplate(toolchain.Template))
 	// d.Set("lifecycle_messaging_webhook_id", *toolchain.LifecycleMessagingWebhookID)
 
@@ -369,8 +397,6 @@ func resourceOpenToolchainToolchainUpdate(ctx context.Context, d *schema.Resourc
 				return diag.Errorf("Error setting toolchain tags: %s", err)
 			}
 		}
-
-		d.Set("tags", newTags)
 	}
 
 	return resourceOpenToolchainToolchainRead(ctx, d, m)

@@ -92,22 +92,33 @@ func dataSourceOpenToolchainToolchain() *schema.Resource {
 			// 		},
 			// 	},
 			// },
-			// "services": {
-			// 	Type:     schema.TypeList,
-			// 	Computed: true,
-			// 	Elem: &schema.Resource{
-			// 		Schema: map[string]*schema.Schema{
-			// 			"broker_id": {
-			// 				Type:     schema.TypeString,
-			// 				Computed: true,
-			// 			},
-			// 			"service_id": {
-			// 				Type:     schema.TypeString,
-			// 				Computed: true,
-			// 			},
-			// 		},
-			// 	},
-			// },
+			"services": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"broker_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"service_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"instance_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"parameters": {
+							Type: schema.TypeMap,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+							Computed: true,
+						},
+					},
+				},
+			},
 			"tags": {
 				Type: schema.TypeSet,
 				Elem: &schema.Schema{
@@ -171,7 +182,7 @@ func dataSourceOpenToolchainToolchainRead(ctx context.Context, d *schema.Resourc
 		tags = append(tags, *tag.Name)
 	}
 
-	// d.Set("services", flattenToolchainServices(toolchain.Services))
+	d.Set("services", flattenToolchainServices(toolchain.Services))
 	d.Set("tags", tags)
 	// d.Set("lifecycle_messaging_webhook_id", *toolchain.LifecycleMessagingWebhookID)
 
@@ -210,8 +221,33 @@ func flattenToolchainServices(svcs []oc.Service) []interface{} {
 
 	for _, svc := range svcs {
 		service := map[string]interface{}{
-			"broker_id":  *svc.BrokerID,
 			"service_id": *svc.ServiceID,
+		}
+
+		if svc.BrokerID != nil {
+			service["broker_id"] = *svc.BrokerID
+		}
+
+		if svc.InstanceID != nil {
+			service["instance_id"] = *svc.InstanceID
+		}
+
+		if svc.Parameters != nil {
+			params := map[string]interface{}{}
+
+			if t, ok := svc.Parameters["type"]; ok {
+				params["type"] = t.(string)
+			}
+
+			if n, ok := svc.Parameters["name"]; ok {
+				params["name"] = n.(string)
+			}
+
+			if l, ok := svc.Parameters["label"]; ok {
+				params["label"] = l.(string)
+			}
+
+			service["parameters"] = params
 		}
 
 		s = append(s, service)
