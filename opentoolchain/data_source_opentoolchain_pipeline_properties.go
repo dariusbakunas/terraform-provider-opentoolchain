@@ -11,9 +11,10 @@ import (
 	oc "github.com/dariusbakunas/opentoolchain-go-sdk/opentoolchainv1"
 )
 
-func dataSourceOpenToolchainTektonPipeline() *schema.Resource {
+func dataSourceOpenToolchainPipelineProperties() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceOpenToolchainTektonPipelineRead,
+		Description: "Get tekton pipeline properties",
+		ReadContext: dataSourceOpenToolchainPipelinePropertiesRead,
 		Schema: map[string]*schema.Schema{
 			"guid": {
 				Description: "The tekton pipeline `guid`",
@@ -59,7 +60,7 @@ func dataSourceOpenToolchainTektonPipeline() *schema.Resource {
 	}
 }
 
-func dataSourceOpenToolchainTektonPipelineRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceOpenToolchainPipelinePropertiesRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	guid := d.Get("guid").(string)
@@ -83,10 +84,10 @@ func dataSourceOpenToolchainTektonPipelineRead(ctx context.Context, d *schema.Re
 	d.Set("toolchain_guid", *pipeline.ToolchainID)
 	d.Set("toolchain_crn", *pipeline.ToolchainCRN)
 
-	d.SetId(fmt.Sprintf("%s:%s", *pipeline.ID, envID))
-
 	d.Set("text_env", getEnvMap(pipeline.EnvProperties, "TEXT"))
 	d.Set("secret_env", getEnvMap(pipeline.EnvProperties, "SECURE"))
+
+	d.SetId(fmt.Sprintf("%s/%s", *pipeline.ID, envID))
 
 	return diags
 }
