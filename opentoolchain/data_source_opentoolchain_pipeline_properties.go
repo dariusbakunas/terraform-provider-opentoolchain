@@ -42,14 +42,16 @@ func dataSourceOpenToolchainPipelineProperties() *schema.Resource {
 				Computed:    true,
 			},
 			"text_env": {
-				Type: schema.TypeMap,
+				Description: "Pipeline environment text properties",
+				Type:        schema.TypeMap,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 				Computed: true,
 			},
 			"secret_env": {
-				Type: schema.TypeMap,
+				Description: "Pipeline environment secret properties",
+				Type:        schema.TypeMap,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},

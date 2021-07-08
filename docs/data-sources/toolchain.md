@@ -37,8 +37,19 @@ data "opentoolchain_toolchain" "tc" {
 - **description** (String) Toolchain description
 - **key** (String) Toolchain key
 - **name** (String) Toolchain name
+- **services** (List of Object) (see [below for nested schema](#nestedatt--services))
 - **tags** (Set of String)
 - **template_repository** (String) The Git repository that the template will be read from
 - **url** (String) Toolchain URL
+
+<a id="nestedatt--services"></a>
+### Nested Schema for `services`
+
+Read-Only:
+
+- **broker_id** (String)
+- **instance_id** (String)
+- **parameters** (Map of String)
+- **service_id** (String)
 
 

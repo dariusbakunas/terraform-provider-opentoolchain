@@ -45,14 +45,16 @@ func resourceOpenToolchainPipelineProperties() *schema.Resource {
 				Computed:    true,
 			},
 			"text_env": {
-				Type: schema.TypeMap,
+				Description: "Pipeline environment text properties that need to be updated",
+				Type:        schema.TypeMap,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 				Optional: true,
 			},
 			"secret_env": {
-				Type: schema.TypeMap,
+				Description: "Pipeline environment secret properties that need to be updated",
+				Type:        schema.TypeMap,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
