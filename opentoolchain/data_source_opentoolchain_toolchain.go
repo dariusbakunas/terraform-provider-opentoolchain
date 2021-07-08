@@ -134,8 +134,8 @@ func dataSourceOpenToolchainToolchainRead(ctx context.Context, d *schema.Resourc
 	t := config.TagClient
 
 	toolchain, _, err := c.GetToolchainWithContext(ctx, &oc.GetToolchainOptions{
-		GUID:  getStringPtr(guid),
-		EnvID: getStringPtr(envID),
+		GUID:  &guid,
+		EnvID: &envID,
 	})
 
 	if err != nil {

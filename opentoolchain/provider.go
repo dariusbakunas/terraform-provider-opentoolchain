@@ -66,7 +66,8 @@ func Provider() *schema.Provider {
 			"opentoolchain_toolchain": resourceOpenToolchainToolchain(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
-			"opentoolchain_toolchain": dataSourceOpenToolchainToolchain(),
+			"opentoolchain_toolchain":       dataSourceOpenToolchainToolchain(),
+			"opentoolchain_tekton_pipeline": dataSourceOpenToolchainTektonPipeline(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
