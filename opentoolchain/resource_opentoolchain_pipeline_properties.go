@@ -52,15 +52,15 @@ func resourceOpenToolchainPipelineProperties() *schema.Resource {
 				},
 				Optional: true,
 			},
-			"secret_env": {
-				Description: "Pipeline environment secret properties that need to be updated",
-				Type:        schema.TypeMap,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-				Optional:  true,
-				Sensitive: true,
-			},
+			// "secret_env": {
+			// 	Description: "Pipeline environment secret properties that need to be updated",
+			// 	Type:        schema.TypeMap,
+			// 	Elem: &schema.Schema{
+			// 		Type: schema.TypeString,
+			// 	},
+			// 	Optional:  true,
+			// 	Sensitive: true,
+			// },
 		},
 	}
 }
@@ -87,7 +87,7 @@ func resourceOpenToolchainPipelinePropertiesRead(ctx context.Context, d *schema.
 	}
 
 	text_env := getEnvMap(pipeline.EnvProperties, "TEXT")
-	secret_env := getEnvMap(pipeline.EnvProperties, "SECURE")
+	//secret_env := getEnvMap(pipeline.EnvProperties, "SECURE")
 
 	if env, ok := d.GetOk("text_env"); ok {
 		envMap := env.(map[string]interface{})
@@ -102,18 +102,18 @@ func resourceOpenToolchainPipelinePropertiesRead(ctx context.Context, d *schema.
 		d.Set("text_env", envMap)
 	}
 
-	if env, ok := d.GetOk("secret_env"); ok {
-		envMap := env.(map[string]interface{})
-		for k := range envMap {
-			if newVal, ok := secret_env[k]; ok {
-				envMap[k] = newVal
-			} else {
-				// key no longer exists? is it possible?
-				delete(envMap, k)
-			}
-		}
-		d.Set("secret_env", envMap)
-	}
+	// if env, ok := d.GetOk("secret_env"); ok {
+	// 	envMap := env.(map[string]interface{})
+	// 	for k := range envMap {
+	// 		if newVal, ok := secret_env[k]; ok {
+	// 			envMap[k] = newVal
+	// 		} else {
+	// 			// key no longer exists? is it possible?
+	// 			delete(envMap, k)
+	// 		}
+	// 	}
+	// 	d.Set("secret_env", envMap)
+	// }
 
 	// log.Printf("[DEBUG] Read tekton pipeline: %v", dbgPrint(pipeline))
 
@@ -148,9 +148,9 @@ func resourceOpenToolchainPipelinePropertiesCreate(ctx context.Context, d *schem
 
 	currentEnv := pipeline.EnvProperties
 	textEnv := d.Get("text_env")
-	secretEnv := d.Get("secret_env")
+	//secretEnv := d.Get("secret_env")
 
-	patchOptions.EnvProperties = makeEnvPatch(currentEnv, textEnv, secretEnv)
+	patchOptions.EnvProperties = makeEnvPatch(currentEnv, textEnv, nil)
 
 	// log.Printf("[DEBUG] Patching tekton pipeline: %v", dbgPrint(patchOptions))
 
@@ -176,7 +176,7 @@ func resourceOpenToolchainPipelinePropertiesUpdate(ctx context.Context, d *schem
 	guid := d.Get("guid").(string)
 	envID := d.Get("env_id").(string)
 
-	if d.HasChange("text_env") || d.HasChange("secret_env") {
+	if d.HasChange("text_env") { //|| d.HasChange("secret_env") {
 		config := m.(*ProviderConfig)
 		c := config.OTClient
 
@@ -192,12 +192,12 @@ func resourceOpenToolchainPipelinePropertiesUpdate(ctx context.Context, d *schem
 
 		currentEnv := pipeline.EnvProperties
 		textEnv := d.Get("text_env")
-		secretEnv := d.Get("secret_env")
+		//secretEnv := d.Get("secret_env")
 
 		patchOptions := &oc.PatchTektonPipelineOptions{
 			GUID:          &guid,
 			EnvID:         &envID,
-			EnvProperties: makeEnvPatch(currentEnv, textEnv, secretEnv),
+			EnvProperties: makeEnvPatch(currentEnv, textEnv, nil),
 		}
 
 		_, _, err = c.PatchTektonPipelineWithContext(ctx, patchOptions)
