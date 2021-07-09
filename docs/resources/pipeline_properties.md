@@ -43,7 +43,6 @@ resource "opentoolchain_pipeline_properties" "tp" {
 ### Optional
 
 - **id** (String) The ID of this resource.
-- **secret_env** (Map of String, Sensitive) Pipeline environment secret properties that need to be updated
 - **text_env** (Map of String) Pipeline environment text properties that need to be updated
 
 ### Read-Only
