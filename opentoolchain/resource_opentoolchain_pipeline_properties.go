@@ -99,6 +99,7 @@ func resourceOpenToolchainPipelinePropertiesRead(ctx context.Context, d *schema.
 				delete(envMap, k)
 			}
 		}
+		d.Set("text_env", envMap)
 	}
 
 	if env, ok := d.GetOk("secret_env"); ok {
@@ -111,9 +112,10 @@ func resourceOpenToolchainPipelinePropertiesRead(ctx context.Context, d *schema.
 				delete(envMap, k)
 			}
 		}
+		d.Set("secret_env", envMap)
 	}
 
-	log.Printf("[DEBUG] Read tekton pipeline: %+v", pipeline)
+	// log.Printf("[DEBUG] Read tekton pipeline: %v", dbgPrint(pipeline))
 
 	d.Set("name", *pipeline.Name)
 	d.Set("toolchain_guid", *pipeline.ToolchainID)
@@ -149,6 +151,8 @@ func resourceOpenToolchainPipelinePropertiesCreate(ctx context.Context, d *schem
 	secretEnv := d.Get("secret_env")
 
 	patchOptions.EnvProperties = makeEnvPatch(currentEnv, textEnv, secretEnv)
+
+	// log.Printf("[DEBUG] Patching tekton pipeline: %v", dbgPrint(patchOptions))
 
 	_, _, err = c.PatchTektonPipelineWithContext(ctx, patchOptions)
 
@@ -220,7 +224,7 @@ func makeEnvPatch(currentEnv []oc.EnvProperty, textEnv interface{}, secretEnv in
 			value := v.(string)
 
 			envMap[k] = oc.EnvProperty{
-				Name:  &k,
+				Name:  getStringPtr(k),
 				Value: &value,
 				Type:  getStringPtr("TEXT"),
 			}
@@ -239,7 +243,7 @@ func makeEnvPatch(currentEnv []oc.EnvProperty, textEnv interface{}, secretEnv in
 			value := v.(string)
 
 			envMap[k] = oc.EnvProperty{
-				Name:  &k,
+				Name:  getStringPtr(k),
 				Value: &value,
 				Type:  getStringPtr("SECURE"),
 			}
