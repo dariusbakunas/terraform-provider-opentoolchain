@@ -15,6 +15,7 @@ description: |-
 ```terraform
 resource "opentoolchain_toolchain" "tc" {
   env_id              = "ibm:yp:us-east"
+  name                = "TEST" # can be updated in place
   resource_group_id   = "<resource group id>"
   repository_token    = var.git_api_key
   template_repository = "https://github.ibm.com/whc-toolchain/whc-developer-toolchain-CI"
@@ -31,6 +32,12 @@ resource "opentoolchain_toolchain" "tc" {
     "gitrepourl" = "https://github.ibm.com/<your repository>"
     "form.pipeline.parameters.UMBRELLA_GIT_BRANCH" = "dev"
     // add more properties here, depending on the template used
+  }
+
+  lifecycle {
+    ignore_changes = [
+      template_properties["toolchain.name"],
+    ]
   }
 }
 ```
