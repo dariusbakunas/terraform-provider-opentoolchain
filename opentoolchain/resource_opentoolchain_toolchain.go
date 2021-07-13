@@ -50,6 +50,12 @@ func resourceOpenToolchainToolchain() *schema.Resource {
 				ForceNew:    true,
 				Default:     "https://github.com/open-toolchain/empty-toolchain",
 			},
+			"repository_token": {
+				Description: "If you are using a private GitHub or GitLab repository to host your template repo you will need to provide a personal access token",
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+			},
 			"resource_group_id": {
 				Description: "The GUID of resource group where toolchain will be created.",
 				Type:        schema.TypeString,
@@ -183,12 +189,17 @@ func resourceOpenToolchainToolchainCreate(ctx context.Context, d *schema.Resourc
 		input.Branch = getStringPtr(branch.(string))
 	}
 
+	if repositoryToken, ok := d.GetOk("repository_token"); ok {
+		input.SetProperty("repository_token", repositoryToken.(string))
+	}
+
 	if tplProps, ok := d.GetOk("template_properties"); ok {
 		props := tplProps.(map[string]interface{})
 		reserved := map[string]bool{
 			"env_id":              true,
 			"autocreate":          true,
 			"template_repository": true,
+			"repository_token":    true,
 			"template_branch":     true,
 			"resource_group_id":   true,
 			"name":                true,
