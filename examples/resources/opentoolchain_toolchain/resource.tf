@@ -1,11 +1,11 @@
 resource "opentoolchain_toolchain" "tc" {
   env_id              = "ibm:yp:us-east"
   resource_group_id   = "<resource group id>"
+  repository_token    = var.git_api_key
   template_repository = "https://github.ibm.com/whc-toolchain/whc-developer-toolchain-CI"
   template_branch = "stable-3.3.3"
   tags = ["dev", "tf"]
   template_properties = {
-    repository_token = var.git_api_key
     "toolchain.name" = "TEST"
     "apiKey" = var.ic_api_key
     "prodRegion" = "us-south"
