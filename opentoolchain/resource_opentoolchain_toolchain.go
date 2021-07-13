@@ -199,10 +199,10 @@ func resourceOpenToolchainToolchainCreate(ctx context.Context, d *schema.Resourc
 			"env_id":              true,
 			"autocreate":          true,
 			"template_repository": true,
-			"repository_token":    true,
-			"template_branch":     true,
-			"resource_group_id":   true,
-			"name":                true,
+			//"repository_token":    true, // TODO: uncomment on next major release (breaking change)
+			"template_branch":   true,
+			"resource_group_id": true,
+			"name":              true,
 		}
 
 		for k, v := range props {
