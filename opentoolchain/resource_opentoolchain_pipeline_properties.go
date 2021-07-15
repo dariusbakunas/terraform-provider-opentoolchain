@@ -86,13 +86,13 @@ func resourceOpenToolchainPipelinePropertiesRead(ctx context.Context, d *schema.
 		return diag.Errorf("Error reading tekton pipeline: %s", err)
 	}
 
-	text_env := getEnvMap(pipeline.EnvProperties, "TEXT")
+	textEnv := getEnvMap(pipeline.EnvProperties, "TEXT")
 	//secret_env := getEnvMap(pipeline.EnvProperties, "SECURE")
 
 	if env, ok := d.GetOk("text_env"); ok {
 		envMap := env.(map[string]interface{})
 		for k := range envMap {
-			if newVal, ok := text_env[k]; ok {
+			if newVal, ok := textEnv[k]; ok {
 				envMap[k] = newVal
 			} else {
 				// key no longer exists? is it possible?
@@ -147,18 +147,19 @@ func resourceOpenToolchainPipelinePropertiesCreate(ctx context.Context, d *schem
 	}
 
 	currentEnv := pipeline.EnvProperties
-	textEnv := d.Get("text_env")
-	//secretEnv := d.Get("secret_env")
+	if textEnv, ok := d.GetOk("text_env"); ok {
+        //secretEnv := d.Get("secret_env")
 
-	patchOptions.EnvProperties = makeEnvPatch(currentEnv, textEnv, nil)
+        patchOptions.EnvProperties = makeEnvPatch(currentEnv, textEnv, nil)
 
-	// log.Printf("[DEBUG] Patching tekton pipeline: %v", dbgPrint(patchOptions))
+        // log.Printf("[DEBUG] Patching tekton pipeline: %v", dbgPrint(patchOptions))
 
-	_, _, err = c.PatchTektonPipelineWithContext(ctx, patchOptions)
+        _, _, err = c.PatchTektonPipelineWithContext(ctx, patchOptions)
 
-	if err != nil {
-		return diag.Errorf("Failed patching tekton pipeline: %s", err)
-	}
+        if err != nil {
+            return diag.Errorf("Failed patching tekton pipeline: %s", err)
+        }
+    }
 
 	d.SetId(fmt.Sprintf("%s/%s", *pipeline.ID, envID))
 
