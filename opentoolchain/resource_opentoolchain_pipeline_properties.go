@@ -52,15 +52,15 @@ func resourceOpenToolchainPipelineProperties() *schema.Resource {
 				},
 				Optional: true,
 			},
-			// "secret_env": {
-			// 	Description: "Pipeline environment secret properties that need to be updated",
-			// 	Type:        schema.TypeMap,
-			// 	Elem: &schema.Schema{
-			// 		Type: schema.TypeString,
-			// 	},
-			// 	Optional:  true,
-			// 	Sensitive: true,
-			// },
+			"secret_env": {
+				Description: "Pipeline environment secret properties that need to be updated, use `{vault::vault_integration_name.VAULT_KEY}` format with vault integration. Due to opentoolchain API limitation, direct string values will force update for every plan",
+				Type:        schema.TypeMap,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Optional: true,
+				//Sensitive: true,
+			},
 		},
 	}
 }
@@ -87,7 +87,7 @@ func resourceOpenToolchainPipelinePropertiesRead(ctx context.Context, d *schema.
 	}
 
 	textEnv := getEnvMap(pipeline.EnvProperties, "TEXT")
-	//secret_env := getEnvMap(pipeline.EnvProperties, "SECURE")
+	secretEnv := getEnvMap(pipeline.EnvProperties, "SECURE")
 
 	if env, ok := d.GetOk("text_env"); ok {
 		envMap := env.(map[string]interface{})
@@ -102,18 +102,18 @@ func resourceOpenToolchainPipelinePropertiesRead(ctx context.Context, d *schema.
 		d.Set("text_env", envMap)
 	}
 
-	// if env, ok := d.GetOk("secret_env"); ok {
-	// 	envMap := env.(map[string]interface{})
-	// 	for k := range envMap {
-	// 		if newVal, ok := secret_env[k]; ok {
-	// 			envMap[k] = newVal
-	// 		} else {
-	// 			// key no longer exists? is it possible?
-	// 			delete(envMap, k)
-	// 		}
-	// 	}
-	// 	d.Set("secret_env", envMap)
-	// }
+	if env, ok := d.GetOk("secret_env"); ok {
+		envMap := env.(map[string]interface{})
+		for k := range envMap {
+			if newVal, ok := secretEnv[k]; ok {
+				envMap[k] = newVal
+			} else {
+				// key no longer exists? is it possible?
+				delete(envMap, k)
+			}
+		}
+		d.Set("secret_env", envMap)
+	}
 
 	// log.Printf("[DEBUG] Read tekton pipeline: %v", dbgPrint(pipeline))
 
@@ -148,18 +148,18 @@ func resourceOpenToolchainPipelinePropertiesCreate(ctx context.Context, d *schem
 
 	currentEnv := pipeline.EnvProperties
 	if textEnv, ok := d.GetOk("text_env"); ok {
-        //secretEnv := d.Get("secret_env")
+		secretEnv := d.Get("secret_env")
 
-        patchOptions.EnvProperties = makeEnvPatch(currentEnv, textEnv, nil)
+		patchOptions.EnvProperties = makeEnvPatch(currentEnv, textEnv, secretEnv)
 
-        // log.Printf("[DEBUG] Patching tekton pipeline: %v", dbgPrint(patchOptions))
+		// log.Printf("[DEBUG] Patching tekton pipeline: %v", dbgPrint(patchOptions))
 
-        _, _, err = c.PatchTektonPipelineWithContext(ctx, patchOptions)
+		_, _, err = c.PatchTektonPipelineWithContext(ctx, patchOptions)
 
-        if err != nil {
-            return diag.Errorf("Failed patching tekton pipeline: %s", err)
-        }
-    }
+		if err != nil {
+			return diag.Errorf("Failed patching tekton pipeline: %s", err)
+		}
+	}
 
 	d.SetId(fmt.Sprintf("%s/%s", *pipeline.ID, envID))
 
@@ -193,12 +193,12 @@ func resourceOpenToolchainPipelinePropertiesUpdate(ctx context.Context, d *schem
 
 		currentEnv := pipeline.EnvProperties
 		textEnv := d.Get("text_env")
-		//secretEnv := d.Get("secret_env")
+		secretEnv := d.Get("secret_env")
 
 		patchOptions := &oc.PatchTektonPipelineOptions{
 			GUID:          &guid,
 			EnvID:         &envID,
-			EnvProperties: makeEnvPatch(currentEnv, textEnv, nil),
+			EnvProperties: makeEnvPatch(currentEnv, textEnv, secretEnv),
 		}
 
 		_, _, err = c.PatchTektonPipelineWithContext(ctx, patchOptions)
@@ -232,7 +232,7 @@ func makeEnvPatch(currentEnv []oc.EnvProperty, textEnv interface{}, secretEnv in
 		}
 	}
 
-	// note: if secret has duplicate key as textEnv it will overwire it
+	// note: if secret has duplicate key as textEnv it will overwrite it
 	if secretEnv != nil {
 		env := secretEnv.(map[string]interface{})
 
@@ -251,7 +251,7 @@ func makeEnvPatch(currentEnv []oc.EnvProperty, textEnv interface{}, secretEnv in
 		}
 	}
 
-	res := []oc.EnvProperty{}
+    var res []oc.EnvProperty
 
 	for _, v := range envMap {
 		res = append(res, v)

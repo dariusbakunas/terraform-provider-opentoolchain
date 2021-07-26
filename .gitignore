@@ -64,3 +64,4 @@ terraform.rc
 terraform
 site/
 .vscode/
+.idea/
