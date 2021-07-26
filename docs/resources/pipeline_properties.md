@@ -43,6 +43,7 @@ resource "opentoolchain_pipeline_properties" "tp" {
 ### Optional
 
 - **id** (String) The ID of this resource.
+- **secret_env** (Map of String) Pipeline environment secret properties that need to be updated, use `{vault::vault_integration_name.VAULT_KEY}` format with vault integration. Due to opentoolchain API limitation, direct string values will force update for every plan
 - **text_env** (Map of String) Pipeline environment text properties that need to be updated
 
 ### Read-Only
