@@ -147,19 +147,21 @@ func resourceOpenToolchainPipelinePropertiesCreate(ctx context.Context, d *schem
 	}
 
 	currentEnv := pipeline.EnvProperties
-	if textEnv, ok := d.GetOk("text_env"); ok {
-		secretEnv := d.Get("secret_env")
 
-		patchOptions.EnvProperties = makeEnvPatch(currentEnv, textEnv, secretEnv)
+	textEnv, txtOk := d.GetOk("text_env")
+	secretEnv, secOk := d.GetOk("secret_env")
 
-		// log.Printf("[DEBUG] Patching tekton pipeline: %v", dbgPrint(patchOptions))
+	if txtOk || secOk {
+        patchOptions.EnvProperties = makeEnvPatch(currentEnv, textEnv, secretEnv)
 
-		_, _, err = c.PatchTektonPipelineWithContext(ctx, patchOptions)
+        // log.Printf("[DEBUG] Patching tekton pipeline: %v", dbgPrint(patchOptions))
 
-		if err != nil {
-			return diag.Errorf("Failed patching tekton pipeline: %s", err)
-		}
-	}
+        _, _, err = c.PatchTektonPipelineWithContext(ctx, patchOptions)
+
+        if err != nil {
+            return diag.Errorf("Failed patching tekton pipeline: %s", err)
+        }
+    }
 
 	d.SetId(fmt.Sprintf("%s/%s", *pipeline.ID, envID))
 
