@@ -179,7 +179,7 @@ func resourceOpenToolchainPipelinePropertiesUpdate(ctx context.Context, d *schem
 	guid := d.Get("guid").(string)
 	envID := d.Get("env_id").(string)
 
-	if d.HasChange("text_env") { //|| d.HasChange("secret_env") {
+	if d.HasChange("text_env") || d.HasChange("secret_env") {
 		config := m.(*ProviderConfig)
 		c := config.OTClient
 
