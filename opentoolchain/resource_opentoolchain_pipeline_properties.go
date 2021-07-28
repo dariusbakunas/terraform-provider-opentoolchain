@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	oc "github.com/dariusbakunas/opentoolchain-go-sdk/opentoolchainv1"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -69,8 +70,11 @@ func resourceOpenToolchainPipelineProperties() *schema.Resource {
 func resourceOpenToolchainPipelinePropertiesRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	guid := d.Get("guid").(string)
-	envID := d.Get("env_id").(string)
+	id := d.Id()
+	idParts := strings.Split(id, "/")
+
+	guid := idParts[0]
+	envID := idParts[1]
 
 	config := m.(*ProviderConfig)
 	c := config.OTClient
