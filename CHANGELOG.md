@@ -1,4 +1,114 @@
 
+<a name="v0.6.11"></a>
+## [v0.6.11](https://github.com/dariusbakunas/terraform-provider-opentoolchain/compare/v0.6.10...v0.6.11)
+
+> 2021-07-28
+
+### Fix
+
+* better handling for pipeline secrets
+
+
+<a name="v0.6.10"></a>
+## [v0.6.10](https://github.com/dariusbakunas/terraform-provider-opentoolchain/compare/v0.6.9...v0.6.10)
+
+> 2021-07-28
+
+### Reverts
+
+* Formatting changes and removal of unused imports.
+
+### Pull Requests
+
+* Merge pull request [#1](https://github.com/dariusbakunas/terraform-provider-opentoolchain/issues/1) from bfelaco/master
+
+
+<a name="v0.6.9"></a>
+## [v0.6.9](https://github.com/dariusbakunas/terraform-provider-opentoolchain/compare/v0.6.8...v0.6.9)
+
+> 2021-07-27
+
+### Fix
+
+* secret update
+
+
+<a name="v0.6.8"></a>
+## [v0.6.8](https://github.com/dariusbakunas/terraform-provider-opentoolchain/compare/v0.6.7...v0.6.8)
+
+> 2021-07-27
+
+### Fix
+
+* make sure secrets are applied when there are no textEnv values
+
+
+<a name="v0.6.7"></a>
+## [v0.6.7](https://github.com/dariusbakunas/terraform-provider-opentoolchain/compare/v0.6.6...v0.6.7)
+
+> 2021-07-26
+
+### Feat
+
+* add secret_env support
+
+
+<a name="v0.6.6"></a>
+## [v0.6.6](https://github.com/dariusbakunas/terraform-provider-opentoolchain/compare/v0.6.5...v0.6.6)
+
+> 2021-07-15
+
+### Fix
+
+* do not call patch api if textEnv is not specified
+
+
+<a name="v0.6.5"></a>
+## [v0.6.5](https://github.com/dariusbakunas/terraform-provider-opentoolchain/compare/v0.6.4...v0.6.5)
+
+> 2021-07-13
+
+
+<a name="v0.6.4"></a>
+## [v0.6.4](https://github.com/dariusbakunas/terraform-provider-opentoolchain/compare/v0.6.3...v0.6.4)
+
+> 2021-07-13
+
+
+<a name="v0.6.3"></a>
+## [v0.6.3](https://github.com/dariusbakunas/terraform-provider-opentoolchain/compare/v0.6.2...v0.6.3)
+
+> 2021-07-13
+
+### Feat
+
+* add optional repository_token parameter
+
+### Fix
+
+* make sure code remains backwards compatible
+
+
+<a name="v0.6.2"></a>
+## [v0.6.2](https://github.com/dariusbakunas/terraform-provider-opentoolchain/compare/v0.6.1...v0.6.2)
+
+> 2021-07-09
+
+### Fix
+
+* temporary remove secret_env
+
+
+<a name="v0.6.1"></a>
+## [v0.6.1](https://github.com/dariusbakunas/terraform-provider-opentoolchain/compare/v0.6.0...v0.6.1)
+
+> 2021-07-08
+
+### Fix
+
+* fix env property handling
+
+
 <a name="v0.6.0"></a>
 ## [v0.6.0](https://github.com/dariusbakunas/terraform-provider-opentoolchain/compare/v0.5.0...v0.6.0)
 
