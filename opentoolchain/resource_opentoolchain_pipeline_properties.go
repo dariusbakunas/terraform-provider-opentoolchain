@@ -22,11 +22,13 @@ func resourceOpenToolchainPipelineProperties() *schema.Resource {
 			"guid": {
 				Description: "The tekton pipeline `guid`",
 				Type:        schema.TypeString,
+				ForceNew:    true,
 				Required:    true,
 			},
 			"env_id": {
 				Description: "Environment ID, example: `ibm:yp:us-south`",
 				Type:        schema.TypeString,
+				ForceNew:    true,
 				Required:    true,
 			},
 			"name": {
@@ -68,11 +70,8 @@ func resourceOpenToolchainPipelineProperties() *schema.Resource {
 func resourceOpenToolchainPipelinePropertiesRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	id := d.Id()
-	idParts := strings.Split(id, "/")
-
-	guid := idParts[0]
-	envID := idParts[1]
+	guid := d.Get("guid").(string)
+	envID := d.Get("env_id").(string)
 
 	config := m.(*ProviderConfig)
 	c := config.OTClient
