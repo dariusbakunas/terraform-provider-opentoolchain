@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strings"
 
 	oc "github.com/dariusbakunas/opentoolchain-go-sdk/opentoolchainv1"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -151,16 +150,16 @@ func resourceOpenToolchainPipelinePropertiesCreate(ctx context.Context, d *schem
 	secretEnv, secOk := d.GetOk("secret_env")
 
 	if txtOk || secOk {
-        patchOptions.EnvProperties = makeEnvPatch(currentEnv, textEnv, secretEnv)
+		patchOptions.EnvProperties = makeEnvPatch(currentEnv, textEnv, secretEnv)
 
-        // log.Printf("[DEBUG] Patching tekton pipeline: %v", dbgPrint(patchOptions))
+		// log.Printf("[DEBUG] Patching tekton pipeline: %v", dbgPrint(patchOptions))
 
-        _, _, err = c.PatchTektonPipelineWithContext(ctx, patchOptions)
+		_, _, err = c.PatchTektonPipelineWithContext(ctx, patchOptions)
 
-        if err != nil {
-            return diag.Errorf("Failed patching tekton pipeline: %s", err)
-        }
-    }
+		if err != nil {
+			return diag.Errorf("Failed patching tekton pipeline: %s", err)
+		}
+	}
 
 	d.SetId(fmt.Sprintf("%s/%s", *pipeline.ID, envID))
 
@@ -252,7 +251,7 @@ func makeEnvPatch(currentEnv []oc.EnvProperty, textEnv interface{}, secretEnv in
 		}
 	}
 
-    var res []oc.EnvProperty
+	var res []oc.EnvProperty
 
 	for _, v := range envMap {
 		res = append(res, v)
