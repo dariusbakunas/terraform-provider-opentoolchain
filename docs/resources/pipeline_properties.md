@@ -48,6 +48,7 @@ resource "opentoolchain_pipeline_properties" "tp" {
 
 ### Read-Only
 
+- **encrypted_secrets** (Map of String, Sensitive) Opentoolchain API does not return actual secret values, this is used internally to track changes to encrypted strings
 - **name** (String) Pipeline name
 - **toolchain_crn** (String) The toolchain `crn`
 - **toolchain_guid** (String) The toolchain `guid`
