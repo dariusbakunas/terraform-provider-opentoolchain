@@ -64,13 +64,13 @@ func resourceOpenToolchainPipelineProperties() *schema.Resource {
 				//Sensitive: true,
 			},
 			"encrypted_secrets": {
-				Type: schema.TypeMap,
+				Type:        schema.TypeMap,
 				Description: "Opentoolchain API does not return actual secret values, this is used internally to track changes to encrypted strings",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 				Sensitive: true,
-				Computed: true,
+				Computed:  true,
 			},
 		},
 	}
@@ -114,21 +114,21 @@ func resourceOpenToolchainPipelinePropertiesRead(ctx context.Context, d *schema.
 	}
 
 	if env, ok := d.GetOk("secret_env"); ok {
-	    encryptedSecrets := d.Get("encrypted_secrets")
+		encryptedSecrets := d.Get("encrypted_secrets")
 		envMap := env.(map[string]interface{})
 		for k := range envMap {
 			if newVal, ok := secretEnv[k]; ok {
-			    if encryptedSecrets != nil {
-			        encrypted := encryptedSecrets.(map[string]interface{})
-			        // opentoolchain API does not return original secret values,
-			        // it returns encrypted strings instead, we save these during resource creation or update
-			        // check if encrypted secret did not change, to determine if update is required
-			        if encrypted[k] != newVal {
-			            envMap[k] = "[MODIFIED]" // encrypted value changed, force update
-                    }
-                } else {
-                    envMap[k] = newVal
-                }
+				if encryptedSecrets != nil {
+					encrypted := encryptedSecrets.(map[string]interface{})
+					// opentoolchain API does not return original secret values,
+					// it returns encrypted strings instead, we save these during resource creation or update
+					// check if encrypted secret did not change, to determine if update is required
+					if encrypted[k] != newVal {
+						envMap[k] = "[MODIFIED]" // encrypted value changed, force update
+					}
+				} else {
+					envMap[k] = newVal
+				}
 			} else {
 				// key no longer exists, delete to force update
 				delete(envMap, k)
@@ -184,17 +184,17 @@ func resourceOpenToolchainPipelinePropertiesCreate(ctx context.Context, d *schem
 			return diag.Errorf("Failed patching tekton pipeline: %s", err)
 		}
 
-        if patchedPipeline != nil {
-            encryptedSecrets := make(map[string]string)
+		if patchedPipeline != nil {
+			encryptedSecrets := make(map[string]string)
 
-            for _, v := range patchedPipeline.EnvProperties {
-                if *v.Type == "SECURE" {
-                    encryptedSecrets[*v.Name] = *v.Value
-                }
-            }
+			for _, v := range patchedPipeline.EnvProperties {
+				if *v.Type == "SECURE" {
+					encryptedSecrets[*v.Name] = *v.Value
+				}
+			}
 
-            d.Set("encrypted_secrets", encryptedSecrets)
-        }
+			d.Set("encrypted_secrets", encryptedSecrets)
+		}
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", *pipeline.ID, envID))
@@ -237,23 +237,23 @@ func resourceOpenToolchainPipelinePropertiesUpdate(ctx context.Context, d *schem
 			EnvProperties: makeEnvPatch(currentEnv, textEnv, secretEnv),
 		}
 
-        patchedPipeline, _, err := c.PatchTektonPipelineWithContext(ctx, patchOptions)
+		patchedPipeline, _, err := c.PatchTektonPipelineWithContext(ctx, patchOptions)
 
 		if err != nil {
 			return diag.Errorf("Failed patching tekton pipeline: %s", err)
 		}
 
-        if patchedPipeline != nil {
-            encryptedSecrets := make(map[string]string)
+		if patchedPipeline != nil {
+			encryptedSecrets := make(map[string]string)
 
-            for _, v := range patchedPipeline.EnvProperties {
-                if *v.Type == "SECURE" {
-                    encryptedSecrets[*v.Name] = *v.Value
-                }
-            }
+			for _, v := range patchedPipeline.EnvProperties {
+				if *v.Type == "SECURE" {
+					encryptedSecrets[*v.Name] = *v.Value
+				}
+			}
 
-            d.Set("encrypted_secrets", encryptedSecrets)
-        }
+			d.Set("encrypted_secrets", encryptedSecrets)
+		}
 	}
 
 	return resourceOpenToolchainPipelinePropertiesRead(ctx, d, m)
