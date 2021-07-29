@@ -15,6 +15,7 @@ require (
 	github.com/dariusbakunas/opentoolchain-go-sdk v0.1.0
 	github.com/fatih/color v1.12.0 // indirect
 	github.com/go-openapi/errors v0.20.0 // indirect
+	github.com/google/uuid v1.3.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/hashicorp/go-hclog v0.16.2 // indirect
