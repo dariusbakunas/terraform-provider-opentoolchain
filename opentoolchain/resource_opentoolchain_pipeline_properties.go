@@ -3,7 +3,6 @@ package opentoolchain
 import (
 	"context"
 	"fmt"
-	"log"
 	"strings"
 
 	oc "github.com/dariusbakunas/opentoolchain-go-sdk/opentoolchainv1"
@@ -63,6 +62,36 @@ func resourceOpenToolchainPipelineProperties() *schema.Resource {
 				Optional: true,
 				//Sensitive: true,
 			},
+			"deleted_keys": {
+				Description: "Any properties listed here will be deleted",
+				Type:        schema.TypeList,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Optional: true,
+			},
+			"original_properties": {
+				Type:        schema.TypeList,
+				Description: "Used internally to restore pipeline to it's original state once resource is deleted",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"value": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+				Sensitive: true,
+				Computed:  true,
+			},
 			"encrypted_secrets": {
 				Type:        schema.TypeMap,
 				Description: "Opentoolchain API does not return actual secret values, this is used internally to track changes to encrypted strings",
@@ -106,7 +135,7 @@ func resourceOpenToolchainPipelinePropertiesRead(ctx context.Context, d *schema.
 			if newVal, ok := textEnv[k]; ok {
 				envMap[k] = newVal
 			} else {
-				// key no longer exists? is it possible?
+				// key no longer exists, delete to force update
 				delete(envMap, k)
 			}
 		}
@@ -124,7 +153,7 @@ func resourceOpenToolchainPipelinePropertiesRead(ctx context.Context, d *schema.
 					// it returns encrypted strings instead, we save these during resource creation or update
 					// check if encrypted secret did not change, to determine if update is required
 					if encrypted[k] != newVal {
-						envMap[k] = "[MODIFIED]" // encrypted value changed, force update
+						envMap[k] = newVal // encrypted value changed, force update
 					}
 				} else {
 					envMap[k] = newVal
@@ -172,9 +201,21 @@ func resourceOpenToolchainPipelinePropertiesCreate(ctx context.Context, d *schem
 
 	textEnv, txtOk := d.GetOk("text_env")
 	secretEnv, secOk := d.GetOk("secret_env")
+	deletedKeys, delOk := d.GetOk("deleted_keys")
 
-	if txtOk || secOk {
-		patchOptions.EnvProperties = makeEnvPatch(currentEnv, textEnv, secretEnv)
+    var originalProps []interface{}
+	for _, prop := range currentEnv {
+	    originalProps = append(originalProps, map[string]interface{}{
+	        "name": *prop.Name,
+	        "value": *prop.Value,
+	        "type": *prop.Type,
+        })
+    }
+
+    d.Set("original_properties", originalProps)
+
+	if txtOk || secOk || delOk {
+		patchOptions.EnvProperties = makeEnvPatch(currentEnv, textEnv, secretEnv, deletedKeys)
 
 		// log.Printf("[DEBUG] Patching tekton pipeline: %v", dbgPrint(patchOptions))
 
@@ -203,8 +244,42 @@ func resourceOpenToolchainPipelinePropertiesCreate(ctx context.Context, d *schem
 }
 
 func resourceOpenToolchainPipelinePropertiesDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// NO-OP: implement once pipeline deletion apis are available
 	var diags diag.Diagnostics
+
+    guid := d.Get("guid").(string)
+    envID := d.Get("env_id").(string)
+
+    config := m.(*ProviderConfig)
+    c := config.OTClient
+
+    patchOptions := &oc.PatchTektonPipelineOptions{
+        GUID:  &guid,
+        EnvID: &envID,
+    }
+
+	originalProps := d.Get("original_properties")
+
+	if originalProps != nil {
+        var props []oc.EnvProperty
+
+        for _, p := range originalProps.([]interface{}) {
+            pMap := p.(map[string]interface{})
+            props = append(props, oc.EnvProperty{
+                Name: getStringPtr(pMap["name"].(string)),
+                Type: getStringPtr(pMap["type"].(string)),
+                Value: getStringPtr(pMap["value"].(string)),
+            })
+        }
+
+        patchOptions.EnvProperties = props
+
+        _, _, err := c.PatchTektonPipelineWithContext(ctx, patchOptions)
+
+        if err != nil {
+            return diag.Errorf("Failed deleting tekton pipeline: %s", err)
+        }
+    }
+
 	d.SetId("")
 	return diags
 }
@@ -213,7 +288,7 @@ func resourceOpenToolchainPipelinePropertiesUpdate(ctx context.Context, d *schem
 	guid := d.Get("guid").(string)
 	envID := d.Get("env_id").(string)
 
-	if d.HasChange("text_env") || d.HasChange("secret_env") {
+	if d.HasChange("text_env") || d.HasChange("secret_env") || d.HasChange("deleted_keys") {
 		config := m.(*ProviderConfig)
 		c := config.OTClient
 
@@ -230,11 +305,12 @@ func resourceOpenToolchainPipelinePropertiesUpdate(ctx context.Context, d *schem
 		currentEnv := pipeline.EnvProperties
 		textEnv := d.Get("text_env")
 		secretEnv := d.Get("secret_env")
+		deletedKeys := d.Get("deleted_keys")
 
 		patchOptions := &oc.PatchTektonPipelineOptions{
 			GUID:          &guid,
 			EnvID:         &envID,
-			EnvProperties: makeEnvPatch(currentEnv, textEnv, secretEnv),
+			EnvProperties: makeEnvPatch(currentEnv, textEnv, secretEnv, deletedKeys),
 		}
 
 		patchedPipeline, _, err := c.PatchTektonPipelineWithContext(ctx, patchOptions)
@@ -259,7 +335,7 @@ func resourceOpenToolchainPipelinePropertiesUpdate(ctx context.Context, d *schem
 	return resourceOpenToolchainPipelinePropertiesRead(ctx, d, m)
 }
 
-func makeEnvPatch(currentEnv []oc.EnvProperty, textEnv interface{}, secretEnv interface{}) []oc.EnvProperty {
+func makeEnvPatch(currentEnv []oc.EnvProperty, textEnv interface{}, secretEnv interface{}, deletedKeys interface{}) []oc.EnvProperty {
 	envMap := make(map[string]oc.EnvProperty)
 
 	for _, p := range currentEnv {
@@ -285,10 +361,6 @@ func makeEnvPatch(currentEnv []oc.EnvProperty, textEnv interface{}, secretEnv in
 		env := secretEnv.(map[string]interface{})
 
 		for k, v := range env {
-			if _, ok := envMap[k]; ok {
-				log.Printf("[WARN] Secret property '%s' will overwrite matching text property", k)
-			}
-
 			value := v.(string)
 
 			envMap[k] = oc.EnvProperty{
@@ -296,6 +368,12 @@ func makeEnvPatch(currentEnv []oc.EnvProperty, textEnv interface{}, secretEnv in
 				Value: &value,
 				Type:  getStringPtr("SECURE"),
 			}
+		}
+	}
+
+	if deletedKeys != nil {
+		for _, key := range deletedKeys.([]interface{}) {
+			delete(envMap, key.(string))
 		}
 	}
 
