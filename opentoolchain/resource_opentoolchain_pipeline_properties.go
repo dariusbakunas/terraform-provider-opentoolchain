@@ -203,15 +203,7 @@ func resourceOpenToolchainPipelinePropertiesCreate(ctx context.Context, d *schem
 	secretEnv, secOk := d.GetOk("secret_env")
 	deletedKeys, delOk := d.GetOk("deleted_keys")
 
-    var originalProps []interface{}
-	for _, prop := range currentEnv {
-	    originalProps = append(originalProps, map[string]interface{}{
-	        "name": *prop.Name,
-	        "value": *prop.Value,
-	        "type": *prop.Type,
-        })
-    }
-
+    originalProps := keepOriginalProps(currentEnv, textEnv, secretEnv, deletedKeys)
     d.Set("original_properties", originalProps)
 
 	if txtOk || secOk || delOk {
@@ -333,6 +325,58 @@ func resourceOpenToolchainPipelinePropertiesUpdate(ctx context.Context, d *schem
 	}
 
 	return resourceOpenToolchainPipelinePropertiesRead(ctx, d, m)
+}
+
+// we want to only retain properties that were mentioned in resource inputs, ignore the rest
+func keepOriginalProps(currentEnv []oc.EnvProperty, textEnv interface{}, secretEnv interface{}, deletedKeys interface{}) []interface{} {
+    var keys []string
+    var result []interface{}
+
+    envMap := make(map[string]oc.EnvProperty)
+
+    for _, p := range currentEnv {
+        envMap[*p.Name] = p
+    }
+
+    if textEnv != nil {
+        env := textEnv.(map[string]interface{})
+
+        for k, _ := range env {
+            if _, ok := envMap[k]; ok {
+                keys = append(keys, k)
+            }
+        }
+    }
+
+    if secretEnv != nil {
+        env := secretEnv.(map[string]interface{})
+
+        for k, _ := range env {
+            if _, ok := envMap[k]; ok {
+                keys = append(keys, k)
+            }
+        }
+    }
+
+    if deletedKeys != nil {
+        for _, key := range deletedKeys.([]interface{}) {
+            k := key.(string)
+            if _, ok := envMap[k]; ok {
+                keys = append(keys, k)
+            }
+        }
+    }
+
+    for _, k := range keys {
+        original := envMap[k]
+        result = append(result, map[string]interface{}{
+            "name": *original.Name,
+            "value": *original.Value,
+            "type": *original.Type,
+        })
+    }
+
+    return result
 }
 
 func makeEnvPatch(currentEnv []oc.EnvProperty, textEnv interface{}, secretEnv interface{}, deletedKeys interface{}) []oc.EnvProperty {
