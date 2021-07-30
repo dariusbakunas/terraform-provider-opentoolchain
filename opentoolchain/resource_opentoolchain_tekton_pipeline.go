@@ -11,7 +11,8 @@ import (
 )
 
 const (
-	pipelineType = "tekton"
+	pipelineServiceType = "pipeline"
+	pipelineType        = "tekton"
 )
 
 func resourceOpenToolchainTektonPipeline() *schema.Resource {
@@ -73,7 +74,7 @@ func resourceOpenToolchainTektonPipelineCreate(ctx context.Context, d *schema.Re
 	options := &oc.CreateServiceInstanceOptions{
 		ToolchainID: &toolchainID,
 		EnvID:       &envID,
-		ServiceID:   getStringPtr("pipeline"),
+		ServiceID:   getStringPtr(pipelineServiceType),
 		Parameters: &oc.CreateServiceInstanceParamsParameters{
 			Name:       &pipelineName,
 			Type:       getStringPtr(pipelineType),
@@ -101,7 +102,7 @@ func resourceOpenToolchainTektonPipelineCreate(ctx context.Context, d *schema.Re
 	// find new pipeline instance
 	if toolchain.Services != nil {
 		for _, v := range toolchain.Services {
-			if v.ServiceID != nil && *v.ServiceID == "pipeline" && v.Parameters != nil && v.Parameters["name"] == pipelineName && v.InstanceID != nil {
+			if v.ServiceID != nil && *v.ServiceID == pipelineServiceType && v.Parameters != nil && v.Parameters["name"] == pipelineName && v.InstanceID != nil {
 				instanceID = *v.InstanceID
 				break
 			}
