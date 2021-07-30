@@ -54,7 +54,7 @@ func resourceOpenToolchainPipelineProperties() *schema.Resource {
 				Optional: true,
 			},
 			"secret_env": {
-				Description: "Pipeline environment secret properties that need to be updated, use `{vault::vault_integration_name.VAULT_KEY}` format with vault integration. Due to opentoolchain API limitation, direct string values will force update for every plan",
+				Description: "Pipeline environment secret properties that need to be updated, use `{vault::vault_integration_name.VAULT_KEY}` format with vault integration.",
 				Type:        schema.TypeMap,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
