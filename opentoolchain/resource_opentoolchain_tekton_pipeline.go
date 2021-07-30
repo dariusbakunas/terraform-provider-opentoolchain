@@ -16,7 +16,7 @@ const (
 
 func resourceOpenToolchainTektonPipeline() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Manage tekton pipeline",
+		Description:   "Manage tekton pipeline (WARN: using undocumented APIs)",
 		CreateContext: resourceOpenToolchainTektonPipelineCreate,
 		ReadContext:   resourceOpenToolchainTektonPipelineRead,
 		DeleteContext: resourceOpenToolchainTektonPipelineDelete,
@@ -138,7 +138,7 @@ func resourceOpenToolchainTektonPipelineCreate(ctx context.Context, d *schema.Re
 			// current pipeline defaults
 			WorkerID:   getStringPtr("public"),
 			WorkerType: getStringPtr("public"),
-			WorkerName: getStringPtr("public"),
+			WorkerName: getStringPtr("IBM Managed workers (Tekton Pipelines v0.20.1)"),
 		},
 	})
 
