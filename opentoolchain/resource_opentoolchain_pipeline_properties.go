@@ -302,7 +302,6 @@ func resourceOpenToolchainPipelinePropertiesUpdate(ctx context.Context, d *schem
 		originalProps := d.Get("original_properties")
 
 		newOriginalProps := updateOriginalProps(currentEnv, textEnv, secretEnv, deletedKeys, originalProps)
-		d.Set("original_properties", newOriginalProps)
 
 		patchOptions := &oc.PatchTektonPipelineOptions{
 			GUID:          &guid,
@@ -327,6 +326,10 @@ func resourceOpenToolchainPipelinePropertiesUpdate(ctx context.Context, d *schem
 
 			d.Set("encrypted_secrets", encryptedSecrets)
 		}
+
+		// remove any values from original_properties that are no longer overridden
+		props := cleanupOriginalProps(textEnv, secretEnv, deletedKeys, newOriginalProps)
+		d.Set("original_properties", props)
 	}
 
 	return resourceOpenToolchainPipelinePropertiesRead(ctx, d, m)
@@ -475,12 +478,31 @@ func updateOriginalProps(currentEnv []oc.EnvProperty, textEnv interface{}, secre
     return result
 }
 
+// apply partial patch to only properties that are mentioned in textEnv, secretEnv or deleted in deletedKeys
+// restore originals if any inputs (overrides) are removed
 func makeEnvPatch(currentEnv []oc.EnvProperty, textEnv interface{}, secretEnv interface{}, deletedKeys interface{}, originalProps interface{}) []oc.EnvProperty {
 	envMap := make(map[string]oc.EnvProperty)
 
 	for _, p := range currentEnv {
 		envMap[*p.Name] = p
 	}
+
+    // restore originals first and then apply changes, that way we don't need to do diff
+    if originalProps != nil {
+        for _, p := range originalProps.([]interface{}) {
+            prop := p.(map[string]interface{})
+
+            key := prop["name"].(string)
+            value := prop["value"].(string)
+            propType := prop["type"].(string)
+
+            envMap[key] = oc.EnvProperty{
+                Name:  getStringPtr(key),
+                Value: &value,
+                Type:  getStringPtr(propType),
+            }
+        }
+    }
 
 	if textEnv != nil {
 		env := textEnv.(map[string]interface{})
@@ -524,4 +546,45 @@ func makeEnvPatch(currentEnv []oc.EnvProperty, textEnv interface{}, secretEnv in
 	}
 
 	return res
+}
+
+// we only want to keep original properties that are overridden, make sure this is last step in update method
+func cleanupOriginalProps(textEnv interface{}, secretEnv interface{}, deletedKeys interface{}, originalProps interface{}) interface{} {
+    var result []interface{}
+
+    if originalProps == nil {
+        return nil
+    }
+
+    allKeys := make(map[string]bool)
+
+    if textEnv != nil {
+        env := textEnv.(map[string]interface{})
+        for k := range env {
+            allKeys[k] = true
+        }
+    }
+
+    if secretEnv != nil {
+        env := secretEnv.(map[string]interface{})
+        for k := range env {
+            allKeys[k] = true
+        }
+    }
+
+    if deletedKeys != nil {
+        for _, key := range deletedKeys.([]interface{}) {
+            allKeys[key.(string)] = true
+        }
+    }
+
+    for _, p := range originalProps.([]interface{}) {
+        prop := p.(map[string]interface{})
+        key := prop["name"].(string)
+        if _, ok := allKeys[key]; ok {
+            result = append(result, p)
+        }
+    }
+
+    return result
 }
