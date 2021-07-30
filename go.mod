@@ -33,6 +33,7 @@ require (
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
 	github.com/oklog/run v1.1.0 // indirect
+	github.com/stretchr/testify v1.7.0 // indirect
 	github.com/zclconf/go-cty v1.9.0 // indirect
 	go.mongodb.org/mongo-driver v1.7.0 // indirect
 	golang.org/x/net v0.0.0-20210716203947-853a461950ff // indirect
