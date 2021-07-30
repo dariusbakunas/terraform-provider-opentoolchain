@@ -3,7 +3,8 @@ package opentoolchain
 import (
 	"context"
 	"fmt"
-	"strings"
+    "sort"
+    "strings"
 
 	oc "github.com/dariusbakunas/opentoolchain-go-sdk/opentoolchainv1"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -207,7 +208,7 @@ func resourceOpenToolchainPipelinePropertiesCreate(ctx context.Context, d *schem
     d.Set("original_properties", originalProps)
 
 	if txtOk || secOk || delOk {
-		patchOptions.EnvProperties = makeEnvPatch(currentEnv, textEnv, secretEnv, deletedKeys)
+		patchOptions.EnvProperties = makeEnvPatch(currentEnv, textEnv, secretEnv, deletedKeys, originalProps)
 
 		// log.Printf("[DEBUG] Patching tekton pipeline: %v", dbgPrint(patchOptions))
 
@@ -298,11 +299,15 @@ func resourceOpenToolchainPipelinePropertiesUpdate(ctx context.Context, d *schem
 		textEnv := d.Get("text_env")
 		secretEnv := d.Get("secret_env")
 		deletedKeys := d.Get("deleted_keys")
+		originalProps := d.Get("original_properties")
+
+		newOriginalProps := updateOriginalProps(currentEnv, textEnv, secretEnv, deletedKeys, originalProps)
+		d.Set("original_properties", newOriginalProps)
 
 		patchOptions := &oc.PatchTektonPipelineOptions{
 			GUID:          &guid,
 			EnvID:         &envID,
-			EnvProperties: makeEnvPatch(currentEnv, textEnv, secretEnv, deletedKeys),
+			EnvProperties: makeEnvPatch(currentEnv, textEnv, secretEnv, deletedKeys, newOriginalProps),
 		}
 
 		patchedPipeline, _, err := c.PatchTektonPipelineWithContext(ctx, patchOptions)
@@ -328,6 +333,8 @@ func resourceOpenToolchainPipelinePropertiesUpdate(ctx context.Context, d *schem
 }
 
 // we want to only retain properties that were mentioned in resource inputs, ignore the rest
+// that way if some property is updated in UI and it was never overridden in terraform, we won't "restore" to the
+// old value once this resource is destroyed
 func keepOriginalProps(currentEnv []oc.EnvProperty, textEnv interface{}, secretEnv interface{}, deletedKeys interface{}) []interface{} {
     var keys []string
     var result []interface{}
@@ -376,10 +383,99 @@ func keepOriginalProps(currentEnv []oc.EnvProperty, textEnv interface{}, secretE
         })
     }
 
+    sort.Slice(result, func(i, j int) bool {
+        a := result[i].(map[string]interface{})["name"].(string)
+        b := result[j].(map[string]interface{})["name"].(string)
+        return a < b
+    })
+
     return result
 }
 
-func makeEnvPatch(currentEnv []oc.EnvProperty, textEnv interface{}, secretEnv interface{}, deletedKeys interface{}) []oc.EnvProperty {
+// we need to update original properties if new key matching current properties is added to any resource inputs
+func updateOriginalProps(currentEnv []oc.EnvProperty, textEnv interface{}, secretEnv interface{}, deletedKeys interface{}, originalProps interface{}) []interface{} {
+    var result []interface{}
+
+    if originalProps == nil {
+        return keepOriginalProps(currentEnv, textEnv, secretEnv, deletedKeys)
+    }
+
+    currentMap := make(map[string]oc.EnvProperty)
+    originalMap := make(map[string]interface{})
+
+    for _, p := range currentEnv {
+        currentMap[*p.Name] = p
+    }
+
+    for _, p := range originalProps.([]interface{}) {
+        prop := p.(map[string]interface{})
+        originalMap[prop["name"].(string)] = p
+    }
+
+    if textEnv != nil {
+        env := textEnv.(map[string]interface{})
+
+        for key := range env {
+            if _, ok := originalMap[key]; !ok {
+                // if we're overriding new property, make sure to save it to originals
+                if current, ok := currentMap[key]; ok {
+                    originalMap[key] = map[string]interface{}{
+                        "name": *current.Name,
+                        "value": *current.Value,
+                        "type": *current.Type,
+                    }
+                }
+            }
+        }
+    }
+
+    if secretEnv != nil {
+        env := secretEnv.(map[string]interface{})
+
+        for key := range env {
+            if _, ok := originalMap[key]; !ok {
+                // if we're overriding new property, make sure to save it to originals
+                if current, ok := currentMap[key]; ok {
+                    originalMap[key] = map[string]interface{}{
+                        "name": *current.Name,
+                        "value": *current.Value,
+                        "type": *current.Type,
+                    }
+                }
+            }
+        }
+    }
+
+    if deletedKeys != nil {
+        for _, k := range deletedKeys.([]interface{}) {
+            key := k.(string)
+            if _, ok := originalMap[key]; !ok {
+                // if we're deleting new property, make sure to save it to originals
+                if current, ok := currentMap[key]; ok {
+                    originalMap[key] = map[string]interface{}{
+                        "name": *current.Name,
+                        "value": *current.Value,
+                        "type": *current.Type,
+                    }
+                }
+            }
+        }
+    }
+
+    for _, original := range originalMap {
+        result = append(result, original)
+    }
+
+    sort.Slice(result, func(i, j int) bool {
+        a := result[i].(map[string]interface{})["name"].(string)
+        b := result[j].(map[string]interface{})["name"].(string)
+        return a < b
+    })
+
+    return result
+}
+
+func makeEnvPatch(currentEnv []oc.EnvProperty, textEnv interface{}, secretEnv interface{}, deletedKeys interface{}, originalProps interface{}) []oc.EnvProperty {
 	envMap := make(map[string]oc.EnvProperty)
 
 	for _, p := range currentEnv {

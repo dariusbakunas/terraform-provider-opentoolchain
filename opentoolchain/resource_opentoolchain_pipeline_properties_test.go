@@ -13,6 +13,7 @@ func TestMakeEnvPatch(t *testing.T) {
         textEnv interface{}
         secretEnv interface{}
         deletedKeys interface{}
+        originalProps interface{}
         expected []oc.EnvProperty
     }{
         {
@@ -31,6 +32,7 @@ func TestMakeEnvPatch(t *testing.T) {
                 "NEW_SECRET": "some secret",
             },
             deletedKeys: []interface{}{"DEL_TEXT", "DEL_SECRET"},
+            originalProps: []interface{}{},
             expected: []oc.EnvProperty{
                 {Name: getStringPtr("ASOCAPIKEYSECRET"), Value: getStringPtr("new secret value"), Type: getStringPtr("SECURE")},
                 {Name: getStringPtr("DISABLE_DEBUG_LOGGING"), Value: getStringPtr("false"), Type: getStringPtr("TEXT")},
@@ -41,13 +43,13 @@ func TestMakeEnvPatch(t *testing.T) {
     }
 
     for _, c := range testcases {
-        actual := makeEnvPatch(c.currentEnv, c.textEnv, c.secretEnv, c.deletedKeys)
+        actual := makeEnvPatch(c.currentEnv, c.textEnv, c.secretEnv, c.deletedKeys, c.originalProps)
 
         sort.Slice(actual, func(i, j int) bool {
             return *actual[i].Name < *actual[j].Name
         })
 
-        assert.Equal(t, actual, c.expected)
+        assert.Equal(t, c.expected, actual)
     }
 }
 
@@ -84,13 +86,50 @@ func TestKeepOriginalProps(t *testing.T) {
 
     for _, c := range testcases {
         actual := keepOriginalProps(c.currentEnv, c.textEnv, c.secretEnv, c.deletedKeys)
+        // no need to sort here, method already sorts final result, which we should also be testing
+        assert.Equal(t, c.expected, actual)
+    }
+}
 
-        sort.Slice(actual, func(i, j int) bool {
-            a := actual[i].(map[string]interface{})["name"].(string)
-            b := actual[j].(map[string]interface{})["name"].(string)
-            return a < b
-        })
+func TestUpdateOriginalProps(t *testing.T) {
+    testcases := []struct {
+        currentEnv []oc.EnvProperty
+        textEnv interface{}
+        secretEnv interface{}
+        deletedKeys interface{}
+        originalProps interface{}
+        expected []interface{}
+    }{
+        {
+            currentEnv: []oc.EnvProperty{
+                {Name: getStringPtr("DISABLE_DEBUG_LOGGING"), Value: getStringPtr("true"), Type: getStringPtr("TEXT")},
+                {Name: getStringPtr("NEW_TEXT"), Value: getStringPtr("original text"), Type: getStringPtr("TEXT")},
+                {Name: getStringPtr("NEW_SECRET"), Value: getStringPtr("original secret"), Type: getStringPtr("SECURE")},
+                {Name: getStringPtr("DELETED_TEXT"), Value: getStringPtr("original text"), Type: getStringPtr("TEXT")},
+            },
+            textEnv: map[string]interface{}{
+                "DISABLE_DEBUG_LOGGING": "false",
+                "NEW_TEXT": "new text",
+            },
+            secretEnv: map[string]interface{}{
+                "NEW_SECRET": "new secret",
+            },
+            deletedKeys: []interface{}{"DELETED_TEXT"},
+            originalProps: []interface{}{
+                map[string]interface{}{"name": "DISABLE_DEBUG_LOGGING", "value": "true", "type": "TEXT"},
+            },
+            expected: []interface{}{
+                map[string]interface{}{"name": "DELETED_TEXT", "value": "original text", "type": "TEXT"},
+                map[string]interface{}{"name": "DISABLE_DEBUG_LOGGING", "value": "true", "type": "TEXT"},
+                map[string]interface{}{"name": "NEW_SECRET", "value": "original secret", "type": "SECURE"},
+                map[string]interface{}{"name": "NEW_TEXT", "value": "original text", "type": "TEXT"},
+            },
+        },
+    }
 
-        assert.Equal(t, actual, c.expected)
+    for _, c := range testcases {
+        actual := updateOriginalProps(c.currentEnv, c.textEnv, c.secretEnv, c.deletedKeys, c.originalProps)
+        // no need to sort here, method already sorts final result, which we should also be testing
+        assert.Equal(t, c.expected, actual)
     }
 }
