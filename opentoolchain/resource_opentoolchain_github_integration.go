@@ -28,6 +28,11 @@ func resourceOpenToolchainGithubIntegration() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 			},
+            "guid": {
+                Description: "The integration `guid`",
+                Type:        schema.TypeString,
+                Computed:    true,
+            },
 			"env_id": {
 				Description: "Environment ID, example: `ibm:yp:us-south`",
 				Type:        schema.TypeString,
@@ -43,7 +48,7 @@ func resourceOpenToolchainGithubIntegration() *schema.Resource {
 					if old == new {
 						return true
 					}
-					if old == strings.TrimSuffix(new, ".git") {
+					if strings.TrimSuffix(old, ".git") == strings.TrimSuffix(new, ".git") {
 						return true
 					}
 					return false
@@ -74,7 +79,7 @@ func resourceOpenToolchainGithubIntegration() *schema.Resource {
 func resourceOpenToolchainGithubIntegrationCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	envID := d.Get("env_id").(string)
 	toolchainID := d.Get("toolchain_id").(string)
-	gitURL := d.Get("git_url").(string)
+	repoURL := d.Get("repo_url").(string)
 	private := d.Get("private").(bool)
 	enableIssues := d.Get("enable_issues").(bool)
 	enableTraceability := d.Get("enable_traceability").(bool)
@@ -83,7 +88,7 @@ func resourceOpenToolchainGithubIntegrationCreate(ctx context.Context, d *schema
 	c := config.OTClient
 
 	integrationUUID := uuid.NewString()
-	uuidURL := fmt.Sprintf("%s/%s", gitURL, integrationUUID)
+	uuidURL := fmt.Sprintf("%s/%s", repoURL, integrationUUID)
 
 	options := &oc.CreateServiceInstanceOptions{
 		ToolchainID: &toolchainID,
@@ -139,7 +144,7 @@ func resourceOpenToolchainGithubIntegrationCreate(ctx context.Context, d *schema
 		EnvID:       &envID,
 		ServiceID:   getStringPtr(githubIntegrationServiceType),
 		Parameters: &oc.PatchServiceInstanceParamsParameters{
-			RepoURL: &gitURL,
+			RepoURL: &repoURL,
 		},
 	})
 
