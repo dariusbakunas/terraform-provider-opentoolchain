@@ -3,12 +3,12 @@
 page_title: "opentoolchain_pipeline_properties Resource - terraform-provider-opentoolchain"
 subcategory: ""
 description: |-
-  Update tekton pipeline properties
+  Update existing tekton pipeline properties. If property exists, it will be updated in place, otherwise new one will be added. When this resource is destroyed, original pipeline properties are restored. (WARN: using unpublished APIs)
 ---
 
 # opentoolchain_pipeline_properties (Resource)
 
-Update tekton pipeline properties
+Update *existing* tekton pipeline properties. If property exists, it will be updated in place, otherwise new one will be added. When this resource is destroyed, original pipeline properties are restored. (WARN: using unpublished APIs)
 
 ## Example Usage
 

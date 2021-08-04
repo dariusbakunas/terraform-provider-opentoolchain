@@ -11,7 +11,7 @@ require (
 	github.com/apparentlymart/go-cidr v1.1.0 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
 	github.com/aws/aws-sdk-go v1.37.0 // indirect
-	github.com/dariusbakunas/opentoolchain-go-sdk v0.0.0-20210708182447-617d5a01d3ac
+	github.com/dariusbakunas/opentoolchain-go-sdk v0.0.0-20210804195820-1fcf85717489
 	github.com/fatih/color v1.12.0 // indirect
 	github.com/form3tech-oss/jwt-go v3.2.3+incompatible // indirect
 	github.com/go-openapi/errors v0.20.0 // indirect
