@@ -41,7 +41,7 @@ func resourceOpenToolchainPipelineTriggers() *schema.Resource {
 							Computed:    true,
 						},
 						"github_integration_guid": {
-							Description: "Trigger ID",
+							Description: "Github integration ID",
 							Type:        schema.TypeString,
 							Computed:    true,
 						},

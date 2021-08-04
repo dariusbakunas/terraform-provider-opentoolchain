@@ -52,7 +52,7 @@ Required:
 
 Read-Only:
 
-- **github_integration_guid** (String) Trigger ID
+- **github_integration_guid** (String) Github integration ID
 - **id** (String) Trigger ID
 - **type** (String) Trigger type
 
