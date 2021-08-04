@@ -33,24 +33,24 @@ data "opentoolchain_pipeline_triggers" "pt" {
 
 ### Read-Only
 
-- **triggers** (Set of Object) (see [below for nested schema](#nestedatt--triggers))
+- **trigger** (Set of Object) (see [below for nested schema](#nestedatt--trigger))
 
-<a id="nestedatt--triggers"></a>
-### Nested Schema for `triggers`
+<a id="nestedatt--trigger"></a>
+### Nested Schema for `trigger`
 
 Read-Only:
 
 - **enabled** (Boolean)
 - **event_listener** (String)
-- **events** (List of Object) (see [below for nested schema](#nestedobjatt--triggers--events))
+- **events** (List of Object) (see [below for nested schema](#nestedobjatt--trigger--events))
 - **github_integration_guid** (String)
 - **id** (String)
 - **name** (String)
-- **scm** (List of Object) (see [below for nested schema](#nestedobjatt--triggers--scm))
+- **scm** (List of Object) (see [below for nested schema](#nestedobjatt--trigger--scm))
 - **type** (String)
 
-<a id="nestedobjatt--triggers--events"></a>
-### Nested Schema for `triggers.events`
+<a id="nestedobjatt--trigger--events"></a>
+### Nested Schema for `trigger.events`
 
 Read-Only:
 
@@ -59,8 +59,8 @@ Read-Only:
 - **push** (Boolean)
 
 
-<a id="nestedobjatt--triggers--scm"></a>
-### Nested Schema for `triggers.scm`
+<a id="nestedobjatt--trigger--scm"></a>
+### Nested Schema for `trigger.scm`
 
 Read-Only:
 
