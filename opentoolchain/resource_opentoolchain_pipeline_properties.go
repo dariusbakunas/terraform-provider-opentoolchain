@@ -13,7 +13,7 @@ import (
 
 func resourceOpenToolchainPipelineProperties() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Update tekton pipeline properties",
+		Description:   "Update *existing* tekton pipeline properties. If property exists, it will be updated in place, otherwise new one will be added. When this resource is destroyed, original pipeline properties are restored.",
 		CreateContext: resourceOpenToolchainPipelinePropertiesCreate,
 		ReadContext:   resourceOpenToolchainPipelinePropertiesRead,
 		DeleteContext: resourceOpenToolchainPipelinePropertiesDelete,
