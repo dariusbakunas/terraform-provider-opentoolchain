@@ -45,24 +45,24 @@ func dataSourceOpenToolchainPipelineTriggers() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"branch": {
-									    Description: "Github branch for scm triggers",
-										Type:     schema.TypeString,
-										Computed: true,
+										Description: "Github branch for scm triggers",
+										Type:        schema.TypeString,
+										Computed:    true,
 									},
 									"type": {
-									    Description: "Trigger type",
-										Type:     schema.TypeString,
-										Computed: true,
+										Description: "SCM type",
+										Type:        schema.TypeString,
+										Computed:    true,
 									},
 									"url": {
-                                        Description: "Github url for scm triggers",
-										Type:     schema.TypeString,
-										Computed: true,
+										Description: "Github url for scm triggers",
+										Type:        schema.TypeString,
+										Computed:    true,
 									},
 									"hook_id": {
-									    Description: "Hook ID for scm triggers",
-										Type:     schema.TypeString,
-										Computed: true,
+										Description: "Hook ID for scm triggers",
+										Type:        schema.TypeString,
+										Computed:    true,
 									},
 								},
 							},
