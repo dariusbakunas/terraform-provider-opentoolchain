@@ -104,6 +104,8 @@ github.com/cncf/xds/go v0.0.0-20210312221358-fbca930ec8ed/go.mod h1:eXthEFrGJvWH
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/dariusbakunas/opentoolchain-go-sdk v0.0.0-20210708182447-617d5a01d3ac h1:0w06KU4c9hVdnCSIXUj+a8+ShAFFp21jpYFNuZMZQKM=
 github.com/dariusbakunas/opentoolchain-go-sdk v0.0.0-20210708182447-617d5a01d3ac/go.mod h1:3tSPfX5WmtAiEMD8EZfJJO50Wbh09LyEaRxJCfQpg7c=
+github.com/dariusbakunas/opentoolchain-go-sdk v0.0.0-20210804195820-1fcf85717489 h1:k96mi6wv4wadCgej+jfD3J5jv7HEuGG8SW2pCowoTFY=
+github.com/dariusbakunas/opentoolchain-go-sdk v0.0.0-20210804195820-1fcf85717489/go.mod h1:3tSPfX5WmtAiEMD8EZfJJO50Wbh09LyEaRxJCfQpg7c=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
