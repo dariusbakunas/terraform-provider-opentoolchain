@@ -13,7 +13,7 @@ import (
 
 func resourceOpenToolchainPipelineProperties() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Update *existing* tekton pipeline properties. If property exists, it will be updated in place, otherwise new one will be added. When this resource is destroyed, original pipeline properties are restored.",
+		Description:   "Update *existing* tekton pipeline properties. If property exists, it will be updated in place, otherwise new one will be added. When this resource is destroyed, original pipeline properties are restored. (WARN: using unpublished APIs)",
 		CreateContext: resourceOpenToolchainPipelinePropertiesCreate,
 		ReadContext:   resourceOpenToolchainPipelinePropertiesRead,
 		DeleteContext: resourceOpenToolchainPipelinePropertiesDelete,
@@ -278,10 +278,10 @@ func resourceOpenToolchainPipelinePropertiesDelete(ctx context.Context, d *schem
 }
 
 func resourceOpenToolchainPipelinePropertiesUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	guid := d.Get("guid").(string)
-	envID := d.Get("env_id").(string)
-
 	if d.HasChange("text_env") || d.HasChange("secret_env") || d.HasChange("deleted_keys") {
+		guid := d.Get("guid").(string)
+		envID := d.Get("env_id").(string)
+
 		config := m.(*ProviderConfig)
 		c := config.OTClient
 
@@ -584,6 +584,30 @@ func cleanupOriginalProps(textEnv interface{}, secretEnv interface{}, deletedKey
 		if _, ok := allKeys[key]; ok {
 			result = append(result, p)
 		}
+	}
+
+	return result
+}
+
+func createTriggerPatch(triggers []interface{}, currentPipelineTriggers []oc.TektonPipelineTrigger) []oc.TektonPipelineTrigger {
+	if currentPipelineTriggers == nil {
+		return nil
+	}
+
+	var result []oc.TektonPipelineTrigger
+	triggerMap := make(map[string]map[string]interface{})
+
+	for _, t := range triggers {
+		tMap := t.(map[string]interface{})
+		triggerMap[tMap["name"].(string)] = tMap
+	}
+
+	for _, t := range currentPipelineTriggers {
+		if existing, ok := triggerMap[*t.Name]; ok {
+			t.Disabled = getBoolPtr(!existing["enabled"].(bool))
+		}
+
+		result = append(result, t)
 	}
 
 	return result
