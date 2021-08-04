@@ -24,7 +24,7 @@ func dataSourceOpenToolchainPipelineTriggers() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"triggers": {
+			"trigger": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -136,7 +136,7 @@ func dataSourceOpenToolchainPipelineTriggersRead(ctx context.Context, d *schema.
 	}
 
 	log.Printf("[DEBUG] Read tekton pipeline configuration: %+v", pipelineConfig)
-	d.Set("triggers", flattenPipelineTriggers(pipelineConfig.Triggers))
+	d.Set("trigger", flattenPipelineTriggers(pipelineConfig.Triggers))
 
 	d.SetId(fmt.Sprintf("%s/%s", *pipelineConfig.ID, envID))
 
