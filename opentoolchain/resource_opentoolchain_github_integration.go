@@ -28,11 +28,11 @@ func resourceOpenToolchainGithubIntegration() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 			},
-            "guid": {
-                Description: "The integration `guid`",
-                Type:        schema.TypeString,
-                Computed:    true,
-            },
+			"guid": {
+				Description: "The integration `guid`",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"env_id": {
 				Description: "Environment ID, example: `ibm:yp:us-south`",
 				Type:        schema.TypeString,
