@@ -167,8 +167,8 @@ func TestUpdateOriginalProps(t *testing.T) {
 	}
 
 	for _, c := range testcases {
-		// TODO: test update to newKeys
-		actual, _ := updateOriginalProps(c.currentEnv, c.textEnv, c.secretEnv, c.deletedKeys, c.newKeys, c.originalProps)
+		// TODO: test update to newKeys and removal of new props
+		actual, _, _ := updateOriginalProps(c.currentEnv, c.textEnv, c.secretEnv, c.deletedKeys, c.newKeys, c.originalProps)
 		// no need to sort here, method already sorts final result, which we should also be testing
 		assert.Equal(t, c.expected, actual)
 	}
