@@ -117,6 +117,8 @@ func resourceOpenToolchainPipelineTriggersRead(ctx context.Context, d *schema.Re
 
 			result = append(result, tMap)
 		}
+
+		d.Set("trigger", result)
 	}
 
 	return diags
@@ -200,4 +202,28 @@ func resourceOpenToolchainPipelineTriggersDelete(ctx context.Context, d *schema.
 	// TODO: add restore to original
 	d.SetId("")
 	return diags
+}
+
+func createTriggerPatch(triggers []interface{}, currentPipelineTriggers []oc.TektonPipelineTrigger) []oc.TektonPipelineTrigger {
+	if currentPipelineTriggers == nil {
+		return nil
+	}
+
+	var result []oc.TektonPipelineTrigger
+	triggerMap := make(map[string]map[string]interface{})
+
+	for _, t := range triggers {
+		tMap := t.(map[string]interface{})
+		triggerMap[tMap["name"].(string)] = tMap
+	}
+
+	for _, t := range currentPipelineTriggers {
+		if existing, ok := triggerMap[*t.Name]; ok {
+			t.Disabled = getBoolPtr(!existing["enabled"].(bool))
+		}
+
+		result = append(result, t)
+	}
+
+	return result
 }

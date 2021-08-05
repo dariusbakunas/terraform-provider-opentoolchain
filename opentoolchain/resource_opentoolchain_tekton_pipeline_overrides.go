@@ -3,7 +3,7 @@ package opentoolchain
 import (
 	"context"
 	"fmt"
-	"sort"
+	"log"
 	"strings"
 
 	oc "github.com/dariusbakunas/opentoolchain-go-sdk/opentoolchainv1"
@@ -11,13 +11,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourceOpenToolchainPipelineProperties() *schema.Resource {
+func resourceOpenToolchainTektonPipelineOverrides() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Update *existing* tekton pipeline properties. If property exists, it will be updated in place, otherwise new one will be added. When this resource is destroyed, original pipeline properties are restored. (WARN: using unpublished APIs)",
-		CreateContext: resourceOpenToolchainPipelinePropertiesCreate,
-		ReadContext:   resourceOpenToolchainPipelinePropertiesRead,
-		DeleteContext: resourceOpenToolchainPipelinePropertiesDelete,
-		UpdateContext: resourceOpenToolchainPipelinePropertiesUpdate,
+		Description:   "Update *existing* tekton pipeline properties and triggers. If property exists, it will be updated in place, otherwise new one will be added. If trigger exists - it will be updated in place, otherwise it will be IGNORED (adding new triggers is not supported). When this resource is destroyed, original pipeline properties are restored. (WARN: using unpublished APIs)",
+		CreateContext: resourceOpenToolchainTektonPipelineOverridesCreate,
+		ReadContext:   resourceOpenToolchainTektonPipelineOverridesRead,
+		DeleteContext: resourceOpenToolchainTektonPipelineOverridesDelete,
+		UpdateContext: resourceOpenToolchainTektonPipelineOverridesUpdate,
 		Schema: map[string]*schema.Schema{
 			"guid": {
 				Description: "The tekton pipeline `guid`",
@@ -62,6 +62,39 @@ func resourceOpenToolchainPipelineProperties() *schema.Resource {
 				},
 				Optional: true,
 				//Sensitive: true,
+			},
+			"trigger": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Description: "Trigger ID",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"github_integration_guid": {
+							Description: "Github integration ID",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"type": {
+							Description: "Trigger type",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"enabled": {
+							Description: "Enable/disable the trigger",
+							Type:        schema.TypeBool,
+							Required:    true,
+						},
+						"name": {
+							Description: "Trigger name, this is used for matching existing trigger",
+							Type:        schema.TypeString,
+							Required:    true,
+						},
+					},
+				},
 			},
 			"deleted_keys": {
 				Description: "Any properties listed here will be deleted",
@@ -114,7 +147,7 @@ func resourceOpenToolchainPipelineProperties() *schema.Resource {
 	}
 }
 
-func resourceOpenToolchainPipelinePropertiesRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceOpenToolchainTektonPipelineOverridesRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	id := d.Id()
@@ -175,6 +208,39 @@ func resourceOpenToolchainPipelinePropertiesRead(ctx context.Context, d *schema.
 		d.Set("secret_env", envMap)
 	}
 
+	if triggers, ok := d.GetOk("trigger"); ok {
+		pipelineTriggerMap := make(map[string]oc.TektonPipelineTrigger)
+
+		if pipeline.Triggers != nil {
+			for _, t := range pipeline.Triggers {
+				pipelineTriggerMap[*t.Name] = t
+			}
+		}
+
+		var result []interface{}
+
+		for _, t := range triggers.(*schema.Set).List() {
+			tMap := t.(map[string]interface{})
+			triggerName := tMap["name"].(string)
+
+			if pipelineTrigger, ok := pipelineTriggerMap[triggerName]; ok {
+				tMap["id"] = *pipelineTrigger.ID
+				tMap["type"] = *pipelineTrigger.Type
+				tMap["enabled"] = !*pipelineTrigger.Disabled
+
+				if pipelineTrigger.ServiceInstanceID != nil {
+					tMap["github_integration_guid"] = *pipelineTrigger.ServiceInstanceID
+				}
+			} else {
+				log.Printf("[WARN] Trigger '%s' does not exist, it will be ignored", triggerName)
+			}
+
+			result = append(result, tMap)
+		}
+
+        d.Set("trigger", result)
+	}
+
 	// log.Printf("[DEBUG] Read tekton pipeline: %v", dbgPrint(pipeline))
 
 	d.Set("name", *pipeline.Name)
@@ -184,7 +250,7 @@ func resourceOpenToolchainPipelinePropertiesRead(ctx context.Context, d *schema.
 	return diags
 }
 
-func resourceOpenToolchainPipelinePropertiesCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceOpenToolchainTektonPipelineOverridesCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	guid := d.Get("guid").(string)
 	envID := d.Get("env_id").(string)
 
@@ -211,13 +277,18 @@ func resourceOpenToolchainPipelinePropertiesCreate(ctx context.Context, d *schem
 	textEnv, txtOk := d.GetOk("text_env")
 	secretEnv, secOk := d.GetOk("secret_env")
 	deletedKeys, delOk := d.GetOk("deleted_keys")
+	triggers, trigOk := d.GetOk("trigger")
 
 	originalProps, newKeys := createOriginalProps(currentEnv, textEnv, secretEnv, deletedKeys)
 	d.Set("new_keys", newKeys)
 	d.Set("original_properties", originalProps)
 
-	if txtOk || secOk || delOk {
+	if txtOk || secOk || delOk || trigOk {
 		patchOptions.EnvProperties = makeEnvPatch(currentEnv, textEnv, secretEnv, deletedKeys, originalProps)
+
+		if triggers != nil {
+			patchOptions.Triggers = createTriggerPatch(triggers.(*schema.Set).List(), pipeline.Triggers)
+		}
 
 		// log.Printf("[DEBUG] Patching tekton pipeline: %v", dbgPrint(patchOptions))
 
@@ -242,10 +313,10 @@ func resourceOpenToolchainPipelinePropertiesCreate(ctx context.Context, d *schem
 
 	d.SetId(fmt.Sprintf("%s/%s", *pipeline.ID, envID))
 
-	return resourceOpenToolchainPipelinePropertiesRead(ctx, d, m)
+	return resourceOpenToolchainTektonPipelineOverridesRead(ctx, d, m)
 }
 
-func resourceOpenToolchainPipelinePropertiesDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceOpenToolchainTektonPipelineOverridesDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	guid := d.Get("guid").(string)
@@ -324,8 +395,8 @@ func resourceOpenToolchainPipelinePropertiesDelete(ctx context.Context, d *schem
 	return diags
 }
 
-func resourceOpenToolchainPipelinePropertiesUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	if d.HasChange("text_env") || d.HasChange("secret_env") || d.HasChange("deleted_keys") {
+func resourceOpenToolchainTektonPipelineOverridesUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	if d.HasChange("text_env") || d.HasChange("secret_env") || d.HasChange("deleted_keys") || d.HasChange("trigger") {
 		guid := d.Get("guid").(string)
 		envID := d.Get("env_id").(string)
 
@@ -348,6 +419,7 @@ func resourceOpenToolchainPipelinePropertiesUpdate(ctx context.Context, d *schem
 		deletedKeys := d.Get("deleted_keys")
 		originalProps := d.Get("original_properties")
 		newKeys := d.Get("new_keys")
+		triggers := d.Get("trigger")
 
 		newOriginalProps, updatedNewKeys := updateOriginalProps(currentEnv, textEnv, secretEnv, deletedKeys, newKeys, originalProps)
 
@@ -355,6 +427,10 @@ func resourceOpenToolchainPipelinePropertiesUpdate(ctx context.Context, d *schem
 			GUID:          &guid,
 			EnvID:         &envID,
 			EnvProperties: makeEnvPatch(currentEnv, textEnv, secretEnv, deletedKeys, newOriginalProps),
+		}
+
+		if triggers != nil {
+			patchOptions.Triggers = createTriggerPatch(triggers.(*schema.Set).List(), pipeline.Triggers)
 		}
 
 		patchedPipeline, _, err := c.PatchTektonPipelineWithContext(ctx, patchOptions)
@@ -381,297 +457,5 @@ func resourceOpenToolchainPipelinePropertiesUpdate(ctx context.Context, d *schem
 		d.Set("new_keys", updatedNewKeys)
 	}
 
-	return resourceOpenToolchainPipelinePropertiesRead(ctx, d, m)
-}
-
-// we want to only retain properties that were mentioned in resource inputs, ignore the rest
-// that way if some property is updated in UI and it was never overridden in terraform, we won't "restore" to the
-// old value once this resource is destroyed
-func createOriginalProps(currentEnv []oc.EnvProperty, textEnv interface{}, secretEnv interface{}, deletedKeys interface{}) (originalProps, newKeys []interface{}) {
-	var existingKeys []string
-
-	envMap := make(map[string]oc.EnvProperty)
-
-	for _, p := range currentEnv {
-		envMap[*p.Name] = p
-	}
-
-	if textEnv != nil {
-		env := textEnv.(map[string]interface{})
-
-		for k, _ := range env {
-			if _, ok := envMap[k]; ok {
-				existingKeys = append(existingKeys, k)
-			} else {
-				newKeys = append(newKeys, k)
-			}
-		}
-	}
-
-	if secretEnv != nil {
-		env := secretEnv.(map[string]interface{})
-
-		for k, _ := range env {
-			if _, ok := envMap[k]; ok {
-				existingKeys = append(existingKeys, k)
-			} else {
-				newKeys = append(newKeys, k)
-			}
-		}
-	}
-
-	if deletedKeys != nil {
-		for _, key := range deletedKeys.([]interface{}) {
-			k := key.(string)
-			if _, ok := envMap[k]; ok {
-				existingKeys = append(existingKeys, k)
-			} else {
-				newKeys = append(newKeys, k) // not common, but nothing stops user from adding new property to deleted keys list
-			}
-		}
-	}
-
-	for _, k := range existingKeys {
-		original := envMap[k]
-		originalProps = append(originalProps, map[string]interface{}{
-			"name":  *original.Name,
-			"value": *original.Value,
-			"type":  *original.Type,
-		})
-	}
-
-	sort.Slice(originalProps, func(i, j int) bool {
-		a := originalProps[i].(map[string]interface{})["name"].(string)
-		b := originalProps[j].(map[string]interface{})["name"].(string)
-		return a < b
-	})
-
-	return originalProps, newKeys
-}
-
-// we need to update original properties if new key matching current properties is added to any resource inputs
-func updateOriginalProps(currentEnv []oc.EnvProperty, textEnv interface{}, secretEnv interface{}, deletedKeys interface{}, newKeys interface{}, originalProps interface{}) (updatedOriginalProps, updatedNewKeys []interface{}) {
-	if originalProps == nil {
-		return createOriginalProps(currentEnv, textEnv, secretEnv, deletedKeys)
-	}
-
-	currentMap := make(map[string]oc.EnvProperty)
-	originalMap := make(map[string]interface{})
-	newKeyMap := make(map[string]interface{})
-
-	for _, p := range currentEnv {
-		currentMap[*p.Name] = p
-	}
-
-	if newKeys != nil {
-		for _, k := range newKeys.([]interface{}) {
-			newKeyMap[k.(string)] = true
-		}
-	}
-
-	for _, p := range originalProps.([]interface{}) {
-		prop := p.(map[string]interface{})
-		originalMap[prop["name"].(string)] = p
-	}
-
-	// TODO: try removing some duplication between text and secret
-	if textEnv != nil {
-		env := textEnv.(map[string]interface{})
-
-		for key := range env {
-			if _, ok := originalMap[key]; !ok {
-				// if we're overriding new property, make sure to save it to originals, but only if this is not new key
-				if current, ok := currentMap[key]; ok {
-					if _, ok := newKeyMap[key]; !ok {
-						originalMap[key] = map[string]interface{}{
-							"name":  *current.Name,
-							"value": *current.Value,
-							"type":  *current.Type,
-						}
-					}
-				} else {
-					// this is new property, we need to update `new_keys` list to make sure we clean it up when resource is destroyed
-					newKeyMap[key] = true
-					//updatedNewKeys = append(updatedNewKeys, key)
-				}
-			}
-		}
-	}
-
-	if secretEnv != nil {
-		env := secretEnv.(map[string]interface{})
-
-		for key := range env {
-			if _, ok := originalMap[key]; !ok {
-				// if we're overriding new property, make sure to save it to originals, but only if this is not new key
-				if current, ok := currentMap[key]; ok {
-					if _, ok := newKeyMap[key]; !ok {
-						originalMap[key] = map[string]interface{}{
-							"name":  *current.Name,
-							"value": *current.Value,
-							"type":  *current.Type,
-						}
-					}
-				} else {
-					// this is new property, we need to update `new_keys` list to make sure we clean it up when resource is destroyed
-					newKeyMap[key] = true
-					//updatedNewKeys = append(updatedNewKeys, key)
-				}
-			}
-		}
-	}
-
-	if deletedKeys != nil {
-		for _, k := range deletedKeys.([]interface{}) {
-			key := k.(string)
-			if _, ok := originalMap[key]; !ok {
-				// if we're deleting new property, make sure to save it to originals, but only if this is not new key
-				if current, ok := currentMap[key]; ok {
-					if _, ok := newKeyMap[key]; !ok {
-						originalMap[key] = map[string]interface{}{
-							"name":  *current.Name,
-							"value": *current.Value,
-							"type":  *current.Type,
-						}
-					}
-				} else {
-					newKeyMap[key] = true
-					//updatedNewKeys = append(updatedNewKeys, key)
-				}
-			}
-		}
-	}
-
-	for _, original := range originalMap {
-		updatedOriginalProps = append(updatedOriginalProps, original)
-	}
-
-	sort.Slice(updatedOriginalProps, func(i, j int) bool {
-		a := updatedOriginalProps[i].(map[string]interface{})["name"].(string)
-		b := updatedOriginalProps[j].(map[string]interface{})["name"].(string)
-		return a < b
-	})
-
-	for k := range newKeyMap {
-		updatedNewKeys = append(updatedNewKeys, k)
-	}
-
-	sort.Slice(updatedNewKeys, func(i, j int) bool {
-		a := updatedNewKeys[i].(string)
-		b := updatedNewKeys[j].(string)
-		return a < b
-	})
-
-	return updatedOriginalProps, updatedNewKeys
-}
-
-// apply partial patch to only properties that are mentioned in textEnv, secretEnv or deleted in deletedKeys
-// restore originals if any inputs (overrides) are removed
-func makeEnvPatch(currentEnv []oc.EnvProperty, textEnv interface{}, secretEnv interface{}, deletedKeys interface{}, originalProps interface{}) []oc.EnvProperty {
-	envMap := make(map[string]oc.EnvProperty)
-
-	for _, p := range currentEnv {
-		envMap[*p.Name] = p
-	}
-
-	// restore originals first and then apply changes, that way we don't need to do diff
-	if originalProps != nil {
-		for _, p := range originalProps.([]interface{}) {
-			prop := p.(map[string]interface{})
-
-			key := prop["name"].(string)
-			value := prop["value"].(string)
-			propType := prop["type"].(string)
-
-			envMap[key] = oc.EnvProperty{
-				Name:  getStringPtr(key),
-				Value: &value,
-				Type:  getStringPtr(propType),
-			}
-		}
-	}
-
-	if textEnv != nil {
-		env := textEnv.(map[string]interface{})
-
-		for k, v := range env {
-			value := v.(string)
-
-			envMap[k] = oc.EnvProperty{
-				Name:  getStringPtr(k),
-				Value: &value,
-				Type:  getStringPtr("TEXT"),
-			}
-		}
-	}
-
-	// note: if secret has duplicate key as textEnv it will overwrite it
-	if secretEnv != nil {
-		env := secretEnv.(map[string]interface{})
-
-		for k, v := range env {
-			value := v.(string)
-
-			envMap[k] = oc.EnvProperty{
-				Name:  getStringPtr(k),
-				Value: &value,
-				Type:  getStringPtr("SECURE"),
-			}
-		}
-	}
-
-	if deletedKeys != nil {
-		for _, key := range deletedKeys.([]interface{}) {
-			delete(envMap, key.(string))
-		}
-	}
-
-	var res []oc.EnvProperty
-
-	for _, v := range envMap {
-		res = append(res, v)
-	}
-
-	return res
-}
-
-// we only want to keep original properties that are overridden, make sure this is last step in update method
-func cleanupOriginalProps(textEnv interface{}, secretEnv interface{}, deletedKeys interface{}, originalProps interface{}) interface{} {
-	var result []interface{}
-
-	if originalProps == nil {
-		return nil
-	}
-
-	allKeys := make(map[string]bool)
-
-	if textEnv != nil {
-		env := textEnv.(map[string]interface{})
-		for k := range env {
-			allKeys[k] = true
-		}
-	}
-
-	if secretEnv != nil {
-		env := secretEnv.(map[string]interface{})
-		for k := range env {
-			allKeys[k] = true
-		}
-	}
-
-	if deletedKeys != nil {
-		for _, key := range deletedKeys.([]interface{}) {
-			allKeys[key.(string)] = true
-		}
-	}
-
-	for _, p := range originalProps.([]interface{}) {
-		prop := p.(map[string]interface{})
-		key := prop["name"].(string)
-		if _, ok := allKeys[key]; ok {
-			result = append(result, p)
-		}
-	}
-
-	return result
+	return resourceOpenToolchainTektonPipelineOverridesRead(ctx, d, m)
 }

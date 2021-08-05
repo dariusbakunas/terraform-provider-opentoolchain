@@ -63,9 +63,10 @@ func Provider() *schema.Provider {
 			// },
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"opentoolchain_toolchain":           resourceOpenToolchainToolchain(),
-			"opentoolchain_pipeline_properties": resourceOpenToolchainPipelineProperties(),
-			"opentoolchain_pipeline_triggers":   resourceOpenToolchainPipelineTriggers(),
+			"opentoolchain_toolchain":                 resourceOpenToolchainToolchain(),
+			"opentoolchain_pipeline_properties":       resourceOpenToolchainPipelineProperties(),
+			"opentoolchain_pipeline_triggers":         resourceOpenToolchainPipelineTriggers(),
+			"opentoolchain_tekton_pipeline_overrides": resourceOpenToolchainTektonPipelineOverrides(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"opentoolchain_toolchain":           dataSourceOpenToolchainToolchain(),
