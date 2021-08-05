@@ -6,12 +6,13 @@ go 1.15
 
 require (
 	github.com/IBM/go-sdk-core v1.1.0
-	github.com/IBM/platform-services-go-sdk v0.19.1
+	github.com/IBM/go-sdk-core/v5 v5.6.2 // indirect
+	github.com/IBM/platform-services-go-sdk v0.19.3
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-cidr v1.1.0 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
 	github.com/aws/aws-sdk-go v1.37.0 // indirect
-	github.com/dariusbakunas/opentoolchain-go-sdk v0.0.0-20210804195820-1fcf85717489
+	github.com/dariusbakunas/opentoolchain-go-sdk v0.0.0-20210805132200-53a88ff49fa5
 	github.com/fatih/color v1.12.0 // indirect
 	github.com/form3tech-oss/jwt-go v3.2.3+incompatible // indirect
 	github.com/go-openapi/errors v0.20.0 // indirect
@@ -35,10 +36,10 @@ require (
 	github.com/oklog/run v1.1.0 // indirect
 	github.com/stretchr/testify v1.7.0 // indirect
 	github.com/zclconf/go-cty v1.9.0 // indirect
-	go.mongodb.org/mongo-driver v1.7.0 // indirect
-	golang.org/x/net v0.0.0-20210716203947-853a461950ff // indirect
+	go.mongodb.org/mongo-driver v1.7.1 // indirect
+	golang.org/x/net v0.0.0-20210726213435-c6fcb2dbf985 // indirect
 	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c // indirect
 	google.golang.org/api v0.34.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20210726143408-b02e89920bf0 // indirect
+	google.golang.org/genproto v0.0.0-20210804223703-f1db76f3300d // indirect
 )

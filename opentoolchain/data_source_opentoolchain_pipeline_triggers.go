@@ -193,9 +193,10 @@ func flattenTriggerSCM(scm *oc.TektonPipelineTriggerScmSource) []interface{} {
 		s["url"] = *scm.URL
 	}
 
-	if scm.HookID != nil {
-		s["hook_id"] = *scm.HookID
-	}
+	// TODO: find workaround for handling both string and int
+	//if scm.HookID != nil {
+	//	s["hook_id"] = *scm.HookID
+	//}
 
 	return []interface{}{s}
 }
