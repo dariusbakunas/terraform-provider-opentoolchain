@@ -51,6 +51,7 @@ resource "opentoolchain_pipeline_properties" "tp" {
 
 - **encrypted_secrets** (Map of String, Sensitive) Opentoolchain API does not return actual secret values, this is used internally to track changes to encrypted strings
 - **name** (String) Pipeline name
+- **new_keys** (List of String) Properties that were not part of original list (used internally)
 - **original_properties** (List of Object, Sensitive) Used internally to restore pipeline to it's original state once resource is deleted (see [below for nested schema](#nestedatt--original_properties))
 - **toolchain_crn** (String) The toolchain `crn`
 - **toolchain_guid** (String) The toolchain `guid`
