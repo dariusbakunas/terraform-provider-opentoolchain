@@ -421,7 +421,16 @@ func resourceOpenToolchainTektonPipelineOverridesUpdate(ctx context.Context, d *
 		newKeys := d.Get("new_keys")
 		triggers := d.Get("trigger")
 
-		newOriginalProps, updatedNewKeys := updateOriginalProps(currentEnv, textEnv, secretEnv, deletedKeys, newKeys, originalProps)
+		newOriginalProps, updatedNewKeys, deletedNewKeys := updateOriginalProps(currentEnv, textEnv, secretEnv, deletedKeys, newKeys, originalProps)
+
+		// if new property is deleted, we need to make sure it is removed in patch payload
+		if deletedNewKeys != nil {
+		   if deletedKeys != nil {
+		       deletedKeys = append(deletedKeys.([]interface{}), deletedNewKeys...)
+           } else {
+               deletedKeys = deletedNewKeys
+           }
+        }
 
 		patchOptions := &oc.PatchTektonPipelineOptions{
 			GUID:          &guid,

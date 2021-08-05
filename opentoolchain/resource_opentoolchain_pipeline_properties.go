@@ -349,7 +349,7 @@ func resourceOpenToolchainPipelinePropertiesUpdate(ctx context.Context, d *schem
 		originalProps := d.Get("original_properties")
 		newKeys := d.Get("new_keys")
 
-		newOriginalProps, updatedNewKeys := updateOriginalProps(currentEnv, textEnv, secretEnv, deletedKeys, newKeys, originalProps)
+		newOriginalProps, updatedNewKeys, _ := updateOriginalProps(currentEnv, textEnv, secretEnv, deletedKeys, newKeys, originalProps)
 
 		patchOptions := &oc.PatchTektonPipelineOptions{
 			GUID:          &guid,
@@ -450,14 +450,17 @@ func createOriginalProps(currentEnv []oc.EnvProperty, textEnv interface{}, secre
 }
 
 // we need to update original properties if new key matching current properties is added to any resource inputs
-func updateOriginalProps(currentEnv []oc.EnvProperty, textEnv interface{}, secretEnv interface{}, deletedKeys interface{}, newKeys interface{}, originalProps interface{}) (updatedOriginalProps, updatedNewKeys []interface{}) {
+func updateOriginalProps(currentEnv []oc.EnvProperty, textEnv interface{}, secretEnv interface{}, deletedKeys interface{}, newKeys interface{}, originalProps interface{}) (updatedOriginalProps, updatedNewKeys, deletedNewKeys []interface{}) {
 	if originalProps == nil {
-		return createOriginalProps(currentEnv, textEnv, secretEnv, deletedKeys)
+        updatedOriginalProps, updatedNewKeys =  createOriginalProps(currentEnv, textEnv, secretEnv, deletedKeys)
+        return updatedNewKeys, updatedNewKeys, nil
 	}
 
 	currentMap := make(map[string]oc.EnvProperty)
 	originalMap := make(map[string]interface{})
 	newKeyMap := make(map[string]interface{})
+
+    allKeys := make(map[string]bool)
 
 	for _, p := range currentEnv {
 		currentMap[*p.Name] = p
@@ -479,6 +482,7 @@ func updateOriginalProps(currentEnv []oc.EnvProperty, textEnv interface{}, secre
 		env := textEnv.(map[string]interface{})
 
 		for key := range env {
+		    allKeys[key] = true
 			if _, ok := originalMap[key]; !ok {
 				// if we're overriding new property, make sure to save it to originals, but only if this is not new key
 				if current, ok := currentMap[key]; ok {
@@ -502,6 +506,8 @@ func updateOriginalProps(currentEnv []oc.EnvProperty, textEnv interface{}, secre
 		env := secretEnv.(map[string]interface{})
 
 		for key := range env {
+            allKeys[key] = true
+
 			if _, ok := originalMap[key]; !ok {
 				// if we're overriding new property, make sure to save it to originals, but only if this is not new key
 				if current, ok := currentMap[key]; ok {
@@ -515,7 +521,6 @@ func updateOriginalProps(currentEnv []oc.EnvProperty, textEnv interface{}, secre
 				} else {
 					// this is new property, we need to update `new_keys` list to make sure we clean it up when resource is destroyed
 					newKeyMap[key] = true
-					//updatedNewKeys = append(updatedNewKeys, key)
 				}
 			}
 		}
@@ -524,6 +529,9 @@ func updateOriginalProps(currentEnv []oc.EnvProperty, textEnv interface{}, secre
 	if deletedKeys != nil {
 		for _, k := range deletedKeys.([]interface{}) {
 			key := k.(string)
+
+            allKeys[key] = true
+
 			if _, ok := originalMap[key]; !ok {
 				// if we're deleting new property, make sure to save it to originals, but only if this is not new key
 				if current, ok := currentMap[key]; ok {
@@ -536,11 +544,18 @@ func updateOriginalProps(currentEnv []oc.EnvProperty, textEnv interface{}, secre
 					}
 				} else {
 					newKeyMap[key] = true
-					//updatedNewKeys = append(updatedNewKeys, key)
 				}
 			}
 		}
 	}
+
+	for k := range newKeyMap {
+	    if _, ok := allKeys[k]; !ok {
+	        // this new property was removed
+	        delete(newKeyMap, k)
+            deletedNewKeys = append(deletedNewKeys, k)
+        }
+    }
 
 	for _, original := range originalMap {
 		updatedOriginalProps = append(updatedOriginalProps, original)
@@ -562,7 +577,7 @@ func updateOriginalProps(currentEnv []oc.EnvProperty, textEnv interface{}, secre
 		return a < b
 	})
 
-	return updatedOriginalProps, updatedNewKeys
+	return updatedOriginalProps, updatedNewKeys, deletedNewKeys
 }
 
 // apply partial patch to only properties that are mentioned in textEnv, secretEnv or deleted in deletedKeys
