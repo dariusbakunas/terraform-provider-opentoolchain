@@ -253,20 +253,27 @@ func resourceOpenToolchainPipelinePropertiesDelete(ctx context.Context, d *schem
 	originalProps := d.Get("original_properties")
 
 	if originalProps != nil {
-		var props []oc.EnvProperty
+        // we have to read existing envProperties first
+        pipeline, _, err := c.GetTektonPipelineWithContext(ctx, &oc.GetTektonPipelineOptions{
+            GUID:  &guid,
+            EnvID: &envID,
+        })
 
-		for _, p := range originalProps.([]interface{}) {
-			pMap := p.(map[string]interface{})
-			props = append(props, oc.EnvProperty{
-				Name:  getStringPtr(pMap["name"].(string)),
-				Type:  getStringPtr(pMap["type"].(string)),
-				Value: getStringPtr(pMap["value"].(string)),
-			})
-		}
+        if err != nil {
+            return diag.Errorf("Error reading tekton pipeline: %s", err)
+        }
 
-		patchOptions.EnvProperties = props
+        currentEnv := pipeline.EnvProperties
 
-		_, _, err := c.PatchTektonPipelineWithContext(ctx, patchOptions)
+        //textEnv := d.Get("text_env")
+        //secretEnv := d.Get("secret_env")
+
+        // TODO: create deletedKeys from existing properties that are not part of original properties
+        // this will allow removing properties that were new
+
+		patchOptions.EnvProperties = makeEnvPatch(currentEnv, nil, nil, nil, originalProps)
+
+		_, _, err = c.PatchTektonPipelineWithContext(ctx, patchOptions)
 
 		if err != nil {
 			return diag.Errorf("Failed deleting tekton pipeline: %s", err)
