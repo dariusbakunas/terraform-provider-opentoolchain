@@ -71,6 +71,14 @@ func resourceOpenToolchainPipelineProperties() *schema.Resource {
 				},
 				Optional: true,
 			},
+			"new_keys": {
+                Description: "Properties that were not part of original list (used internally)",
+                Type:        schema.TypeList,
+                Elem: &schema.Schema{
+                    Type: schema.TypeString,
+                },
+                Computed: true,
+            },
 			"original_properties": {
 				Type:        schema.TypeList,
 				Description: "Used internally to restore pipeline to it's original state once resource is deleted",
@@ -204,7 +212,8 @@ func resourceOpenToolchainPipelinePropertiesCreate(ctx context.Context, d *schem
 	secretEnv, secOk := d.GetOk("secret_env")
 	deletedKeys, delOk := d.GetOk("deleted_keys")
 
-	originalProps := keepOriginalProps(currentEnv, textEnv, secretEnv, deletedKeys)
+	originalProps, newKeys := createOriginalProps(currentEnv, textEnv, secretEnv, deletedKeys)
+	d.Set("new_keys", newKeys)
 	d.Set("original_properties", originalProps)
 
 	if txtOk || secOk || delOk {
@@ -265,13 +274,44 @@ func resourceOpenToolchainPipelinePropertiesDelete(ctx context.Context, d *schem
 
         currentEnv := pipeline.EnvProperties
 
-        //textEnv := d.Get("text_env")
-        //secretEnv := d.Get("secret_env")
+        textEnv := d.Get("text_env")
+        secretEnv := d.Get("secret_env")
+        newKeys := d.Get("new_keys")
 
-        // TODO: create deletedKeys from existing properties that are not part of original properties
-        // this will allow removing properties that were new
+        var deletedKeys []interface{}
 
-		patchOptions.EnvProperties = makeEnvPatch(currentEnv, nil, nil, nil, originalProps)
+        originalMap := make(map[string]interface{})
+        for _, p := range originalProps.([]interface{}) {
+            prop := p.(map[string]interface{})
+            originalMap[prop["name"].(string)] = p
+        }
+
+        if textEnv != nil {
+            env := textEnv.(map[string]interface{})
+
+            for k := range env {
+                if _, ok := originalMap[k]; !ok {
+                    deletedKeys = append(deletedKeys, k)
+                }
+            }
+        }
+
+        if secretEnv != nil {
+            env := secretEnv.(map[string]interface{})
+
+            for k := range env {
+                if _, ok := originalMap[k]; !ok {
+                    deletedKeys = append(deletedKeys, k)
+                }
+            }
+        }
+
+        // this will remove properties that were new
+        if newKeys != nil {
+            deletedKeys = append(deletedKeys, newKeys.([]interface{})...)
+        }
+
+		patchOptions.EnvProperties = makeEnvPatch(currentEnv, nil, nil, deletedKeys, originalProps)
 
 		_, _, err = c.PatchTektonPipelineWithContext(ctx, patchOptions)
 
@@ -307,8 +347,9 @@ func resourceOpenToolchainPipelinePropertiesUpdate(ctx context.Context, d *schem
 		secretEnv := d.Get("secret_env")
 		deletedKeys := d.Get("deleted_keys")
 		originalProps := d.Get("original_properties")
+		newKeys := d.Get("new_keys")
 
-		newOriginalProps := updateOriginalProps(currentEnv, textEnv, secretEnv, deletedKeys, originalProps)
+		newOriginalProps, updatedNewKeys := updateOriginalProps(currentEnv, textEnv, secretEnv, deletedKeys, newKeys, originalProps)
 
 		patchOptions := &oc.PatchTektonPipelineOptions{
 			GUID:          &guid,
@@ -337,6 +378,7 @@ func resourceOpenToolchainPipelinePropertiesUpdate(ctx context.Context, d *schem
 		// remove any values from original_properties that are no longer overridden
 		props := cleanupOriginalProps(textEnv, secretEnv, deletedKeys, newOriginalProps)
 		d.Set("original_properties", props)
+		d.Set("new_keys", updatedNewKeys)
 	}
 
 	return resourceOpenToolchainPipelinePropertiesRead(ctx, d, m)
@@ -345,9 +387,8 @@ func resourceOpenToolchainPipelinePropertiesUpdate(ctx context.Context, d *schem
 // we want to only retain properties that were mentioned in resource inputs, ignore the rest
 // that way if some property is updated in UI and it was never overridden in terraform, we won't "restore" to the
 // old value once this resource is destroyed
-func keepOriginalProps(currentEnv []oc.EnvProperty, textEnv interface{}, secretEnv interface{}, deletedKeys interface{}) []interface{} {
-	var keys []string
-	var result []interface{}
+func createOriginalProps(currentEnv []oc.EnvProperty, textEnv interface{}, secretEnv interface{}, deletedKeys interface{}) (originalProps, newKeys []interface{}) {
+	var existingKeys []string
 
 	envMap := make(map[string]oc.EnvProperty)
 
@@ -360,8 +401,10 @@ func keepOriginalProps(currentEnv []oc.EnvProperty, textEnv interface{}, secretE
 
 		for k, _ := range env {
 			if _, ok := envMap[k]; ok {
-				keys = append(keys, k)
-			}
+				existingKeys = append(existingKeys, k)
+			} else {
+			    newKeys = append(newKeys, k)
+            }
 		}
 	}
 
@@ -370,8 +413,10 @@ func keepOriginalProps(currentEnv []oc.EnvProperty, textEnv interface{}, secretE
 
 		for k, _ := range env {
 			if _, ok := envMap[k]; ok {
-				keys = append(keys, k)
-			}
+				existingKeys = append(existingKeys, k)
+			} else {
+                newKeys = append(newKeys, k)
+            }
 		}
 	}
 
@@ -379,62 +424,76 @@ func keepOriginalProps(currentEnv []oc.EnvProperty, textEnv interface{}, secretE
 		for _, key := range deletedKeys.([]interface{}) {
 			k := key.(string)
 			if _, ok := envMap[k]; ok {
-				keys = append(keys, k)
-			}
+				existingKeys = append(existingKeys, k)
+			} else {
+                newKeys = append(newKeys, k) // not common, but nothing stops user from adding new property to deleted keys list
+            }
 		}
 	}
 
-	for _, k := range keys {
+	for _, k := range existingKeys {
 		original := envMap[k]
-		result = append(result, map[string]interface{}{
+        originalProps = append(originalProps, map[string]interface{}{
 			"name":  *original.Name,
 			"value": *original.Value,
 			"type":  *original.Type,
 		})
 	}
 
-	sort.Slice(result, func(i, j int) bool {
-		a := result[i].(map[string]interface{})["name"].(string)
-		b := result[j].(map[string]interface{})["name"].(string)
+	sort.Slice(originalProps, func(i, j int) bool {
+		a := originalProps[i].(map[string]interface{})["name"].(string)
+		b := originalProps[j].(map[string]interface{})["name"].(string)
 		return a < b
 	})
 
-	return result
+	return originalProps, newKeys
 }
 
 // we need to update original properties if new key matching current properties is added to any resource inputs
-func updateOriginalProps(currentEnv []oc.EnvProperty, textEnv interface{}, secretEnv interface{}, deletedKeys interface{}, originalProps interface{}) []interface{} {
-	var result []interface{}
-
+func updateOriginalProps(currentEnv []oc.EnvProperty, textEnv interface{}, secretEnv interface{}, deletedKeys interface{}, newKeys interface{}, originalProps interface{}) (updatedOriginalProps, updatedNewKeys []interface{}) {
 	if originalProps == nil {
-		return keepOriginalProps(currentEnv, textEnv, secretEnv, deletedKeys)
+		return createOriginalProps(currentEnv, textEnv, secretEnv, deletedKeys)
 	}
 
 	currentMap := make(map[string]oc.EnvProperty)
 	originalMap := make(map[string]interface{})
+	newKeyMap := make(map[string]interface{})
 
 	for _, p := range currentEnv {
 		currentMap[*p.Name] = p
 	}
+
+	if newKeys != nil {
+        for _, k := range newKeys.([]interface{}) {
+            newKeyMap[k.(string)] = true
+        }
+    }
 
 	for _, p := range originalProps.([]interface{}) {
 		prop := p.(map[string]interface{})
 		originalMap[prop["name"].(string)] = p
 	}
 
+	// TODO: try removing some duplication between text and secret
 	if textEnv != nil {
 		env := textEnv.(map[string]interface{})
 
 		for key := range env {
 			if _, ok := originalMap[key]; !ok {
-				// if we're overriding new property, make sure to save it to originals
+				// if we're overriding new property, make sure to save it to originals, but only if this is not new key
 				if current, ok := currentMap[key]; ok {
-					originalMap[key] = map[string]interface{}{
-						"name":  *current.Name,
-						"value": *current.Value,
-						"type":  *current.Type,
-					}
-				}
+				    if _, ok := newKeyMap[key]; !ok {
+                        originalMap[key] = map[string]interface{}{
+                            "name":  *current.Name,
+                            "value": *current.Value,
+                            "type":  *current.Type,
+                        }
+                    }
+				} else {
+				    // this is new property, we need to update `new_keys` list to make sure we clean it up when resource is destroyed
+                    newKeyMap[key] = true
+                    //updatedNewKeys = append(updatedNewKeys, key)
+                }
 			}
 		}
 	}
@@ -444,14 +503,20 @@ func updateOriginalProps(currentEnv []oc.EnvProperty, textEnv interface{}, secre
 
 		for key := range env {
 			if _, ok := originalMap[key]; !ok {
-				// if we're overriding new property, make sure to save it to originals
+				// if we're overriding new property, make sure to save it to originals, but only if this is not new key
 				if current, ok := currentMap[key]; ok {
-					originalMap[key] = map[string]interface{}{
-						"name":  *current.Name,
-						"value": *current.Value,
-						"type":  *current.Type,
-					}
-				}
+                    if _, ok := newKeyMap[key]; !ok {
+                        originalMap[key] = map[string]interface{}{
+                            "name":  *current.Name,
+                            "value": *current.Value,
+                            "type":  *current.Type,
+                        }
+                    }
+				} else {
+                    // this is new property, we need to update `new_keys` list to make sure we clean it up when resource is destroyed
+                    newKeyMap[key] = true
+                    //updatedNewKeys = append(updatedNewKeys, key)
+                }
 			}
 		}
 	}
@@ -460,29 +525,44 @@ func updateOriginalProps(currentEnv []oc.EnvProperty, textEnv interface{}, secre
 		for _, k := range deletedKeys.([]interface{}) {
 			key := k.(string)
 			if _, ok := originalMap[key]; !ok {
-				// if we're deleting new property, make sure to save it to originals
+				// if we're deleting new property, make sure to save it to originals, but only if this is not new key
 				if current, ok := currentMap[key]; ok {
-					originalMap[key] = map[string]interface{}{
-						"name":  *current.Name,
-						"value": *current.Value,
-						"type":  *current.Type,
-					}
-				}
+                    if _, ok := newKeyMap[key]; !ok {
+                        originalMap[key] = map[string]interface{}{
+                            "name":  *current.Name,
+                            "value": *current.Value,
+                            "type":  *current.Type,
+                        }
+                    }
+				} else {
+                    newKeyMap[key] = true
+                    //updatedNewKeys = append(updatedNewKeys, key)
+                }
 			}
 		}
 	}
 
 	for _, original := range originalMap {
-		result = append(result, original)
+		updatedOriginalProps = append(updatedOriginalProps, original)
 	}
 
-	sort.Slice(result, func(i, j int) bool {
-		a := result[i].(map[string]interface{})["name"].(string)
-		b := result[j].(map[string]interface{})["name"].(string)
+	sort.Slice(updatedOriginalProps, func(i, j int) bool {
+		a := updatedOriginalProps[i].(map[string]interface{})["name"].(string)
+		b := updatedOriginalProps[j].(map[string]interface{})["name"].(string)
 		return a < b
 	})
 
-	return result
+	for k := range newKeyMap {
+	    updatedNewKeys = append(updatedNewKeys, k)
+    }
+
+    sort.Slice(updatedNewKeys, func(i, j int) bool {
+        a := updatedNewKeys[i].(string)
+        b := updatedNewKeys[j].(string)
+        return a < b
+    })
+
+	return updatedOriginalProps, updatedNewKeys
 }
 
 // apply partial patch to only properties that are mentioned in textEnv, secretEnv or deleted in deletedKeys

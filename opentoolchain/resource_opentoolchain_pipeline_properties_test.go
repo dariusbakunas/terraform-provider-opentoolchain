@@ -92,7 +92,8 @@ func TestKeepOriginalProps(t *testing.T) {
 		textEnv     interface{}
 		secretEnv   interface{}
 		deletedKeys interface{}
-		expected    []interface{}
+		expectedOriginal    []interface{}
+		expectedNew         []interface{}
 	}{
 		{
 			currentEnv: []oc.EnvProperty{
@@ -107,20 +108,23 @@ func TestKeepOriginalProps(t *testing.T) {
 			},
 			secretEnv: map[string]interface{}{
 				"SOME_SECRET": "some secret",
+				"NEW_SECRET": "new secret",
 			},
 			deletedKeys: []interface{}{"DEL_TEXT", "DEL_SECRET"},
-			expected: []interface{}{
+			expectedOriginal: []interface{}{
 				map[string]interface{}{"name": "DEL_TEXT", "value": "text", "type": "TEXT"},
 				map[string]interface{}{"name": "DISABLE_DEBUG_LOGGING", "value": "true", "type": "TEXT"},
 				map[string]interface{}{"name": "SOME_SECRET", "value": "secret text", "type": "SECURE"},
 			},
+			expectedNew: []interface{}{"NEW_PROP", "NEW_SECRET", "DEL_SECRET"},
 		},
 	}
 
 	for _, c := range testcases {
-		actual := keepOriginalProps(c.currentEnv, c.textEnv, c.secretEnv, c.deletedKeys)
+		actualOriginal, actualNew := createOriginalProps(c.currentEnv, c.textEnv, c.secretEnv, c.deletedKeys)
 		// no need to sort here, method already sorts final result, which we should also be testing
-		assert.Equal(t, c.expected, actual)
+		assert.Equal(t, c.expectedOriginal, actualOriginal)
+        assert.Equal(t, c.expectedNew, actualNew)
 	}
 }
 
@@ -130,6 +134,7 @@ func TestUpdateOriginalProps(t *testing.T) {
 		textEnv       interface{}
 		secretEnv     interface{}
 		deletedKeys   interface{}
+		newKeys       interface{}
 		originalProps interface{}
 		expected      []interface{}
 	}{
@@ -148,6 +153,7 @@ func TestUpdateOriginalProps(t *testing.T) {
 				"NEW_SECRET": "new secret",
 			},
 			deletedKeys: []interface{}{"DELETED_TEXT"},
+            newKeys: []interface{}{},
 			originalProps: []interface{}{
 				map[string]interface{}{"name": "DISABLE_DEBUG_LOGGING", "value": "true", "type": "TEXT"},
 			},
@@ -161,7 +167,8 @@ func TestUpdateOriginalProps(t *testing.T) {
 	}
 
 	for _, c := range testcases {
-		actual := updateOriginalProps(c.currentEnv, c.textEnv, c.secretEnv, c.deletedKeys, c.originalProps)
+	    // TODO: test update to newKeys
+		actual, _ := updateOriginalProps(c.currentEnv, c.textEnv, c.secretEnv, c.deletedKeys, c.newKeys, c.originalProps)
 		// no need to sort here, method already sorts final result, which we should also be testing
 		assert.Equal(t, c.expected, actual)
 	}
