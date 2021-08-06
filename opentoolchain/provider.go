@@ -72,6 +72,7 @@ func Provider() *schema.Provider {
 			"opentoolchain_toolchain":           dataSourceOpenToolchainToolchain(),
 			"opentoolchain_pipeline_properties": dataSourceOpenToolchainPipelineProperties(),
 			"opentoolchain_pipeline_triggers":   dataSourceOpenToolchainPipelineTriggers(),
+			"opentoolchain_tekton_pipeline_config": dataSourceOpenToolchainTektonPipelineConfig(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
