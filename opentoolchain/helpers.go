@@ -1,7 +1,7 @@
 package opentoolchain
 
 import (
-    "encoding/json"
+	"encoding/json"
 )
 
 func getStringPtr(s string) *string {
@@ -33,27 +33,27 @@ func expandStringList(list []interface{}) []string {
 // compares source map keys or array of strings against target map keys
 // returns a list of matched keys and new keys
 func getKeyDiff(targetMap map[string]interface{}, source interface{}) (matchedKeys, newKeys []interface{}) {
-    if m, ok := source.(map[string]interface{}); ok {
-        for k := range m {
-            if _, ok := targetMap[k]; ok {
-                matchedKeys = append(matchedKeys, k)
-                continue
-            }
+	if m, ok := source.(map[string]interface{}); ok {
+		for k := range m {
+			if _, ok := targetMap[k]; ok {
+				matchedKeys = append(matchedKeys, k)
+				continue
+			}
 
-            newKeys = append(newKeys, k)
-        }
-    }
+			newKeys = append(newKeys, k)
+		}
+	}
 
-    if arr, ok := source.([]interface{}); ok {
-        for _, k := range arr {
-            if _, ok := targetMap[k.(string)]; ok {
-                matchedKeys = append(matchedKeys, k)
-                continue
-            }
+	if arr, ok := source.([]interface{}); ok {
+		for _, k := range arr {
+			if _, ok := targetMap[k.(string)]; ok {
+				matchedKeys = append(matchedKeys, k)
+				continue
+			}
 
-            newKeys = append(newKeys, k)
-        }
-    }
+			newKeys = append(newKeys, k)
+		}
+	}
 
-    return matchedKeys, newKeys
+	return matchedKeys, newKeys
 }

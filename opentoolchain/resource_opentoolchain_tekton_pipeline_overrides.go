@@ -279,7 +279,15 @@ func resourceOpenToolchainTektonPipelineOverridesCreate(ctx context.Context, d *
 	deletedKeys, delOk := d.GetOk("deleted_keys")
 	triggers, trigOk := d.GetOk("trigger")
 
-	originalProps, newKeys := createOriginalProps(currentEnv, textEnv, secretEnv, deletedKeys)
+	envMap := make(map[string]interface{})
+
+	for _, p := range currentEnv {
+		envMap[*p.Name] = p
+	}
+
+	matchedKeys, newKeys := matchEnvironmentKeys(envMap, textEnv, secretEnv, deletedKeys)
+	originalProps := createOriginalProps(envMap, matchedKeys)
+
 	d.Set("new_keys", newKeys)
 	d.Set("original_properties", originalProps)
 

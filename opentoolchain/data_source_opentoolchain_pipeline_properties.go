@@ -13,9 +13,9 @@ import (
 
 func dataSourceOpenToolchainPipelineProperties() *schema.Resource {
 	return &schema.Resource{
-		Description: "Get tekton pipeline properties",
-        DeprecationMessage: "Use opentoolchain_tekton_pipeline_config data source instead",
-		ReadContext: dataSourceOpenToolchainPipelinePropertiesRead,
+		Description:        "Get tekton pipeline properties",
+		DeprecationMessage: "Use opentoolchain_tekton_pipeline_config data source instead",
+		ReadContext:        dataSourceOpenToolchainPipelinePropertiesRead,
 		Schema: map[string]*schema.Schema{
 			"guid": {
 				Description: "The tekton pipeline `guid`",

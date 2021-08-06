@@ -69,9 +69,9 @@ func Provider() *schema.Provider {
 			"opentoolchain_tekton_pipeline_overrides": resourceOpenToolchainTektonPipelineOverrides(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
-			"opentoolchain_toolchain":           dataSourceOpenToolchainToolchain(),
-			"opentoolchain_pipeline_properties": dataSourceOpenToolchainPipelineProperties(),
-			"opentoolchain_pipeline_triggers":   dataSourceOpenToolchainPipelineTriggers(),
+			"opentoolchain_toolchain":              dataSourceOpenToolchainToolchain(),
+			"opentoolchain_pipeline_properties":    dataSourceOpenToolchainPipelineProperties(),
+			"opentoolchain_pipeline_triggers":      dataSourceOpenToolchainPipelineTriggers(),
 			"opentoolchain_tekton_pipeline_config": dataSourceOpenToolchainTektonPipelineConfig(),
 		},
 		ConfigureContextFunc: providerConfigure,

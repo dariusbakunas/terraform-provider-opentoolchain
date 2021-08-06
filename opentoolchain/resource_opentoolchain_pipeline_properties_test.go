@@ -86,21 +86,21 @@ func TestMakeEnvPatch(t *testing.T) {
 	}
 }
 
-func TestKeepOriginalProps(t *testing.T) {
+func TestMatchEnvironmentKeys(t *testing.T) {
 	testcases := []struct {
-		currentEnv       []oc.EnvProperty
-		textEnv          interface{}
-		secretEnv        interface{}
-		deletedKeys      interface{}
-		expectedOriginal []interface{}
-		expectedNew      []interface{}
+		currentEnv      map[string]interface{}
+		textEnv         interface{}
+		secretEnv       interface{}
+		deletedKeys     interface{}
+		expectedMatched []interface{}
+		expectedNew     []interface{}
 	}{
 		{
-			currentEnv: []oc.EnvProperty{
-				{Name: getStringPtr("DISABLE_DEBUG_LOGGING"), Value: getStringPtr("true"), Type: getStringPtr("TEXT")},
-				{Name: getStringPtr("ASOCAPIKEYSECRET"), Value: getStringPtr("sdoidhjsofjsodjfi"), Type: getStringPtr("SECURE")},
-				{Name: getStringPtr("DEL_TEXT"), Value: getStringPtr("text"), Type: getStringPtr("TEXT")},
-				{Name: getStringPtr("SOME_SECRET"), Value: getStringPtr("secret text"), Type: getStringPtr("SECURE")},
+			currentEnv: map[string]interface{}{
+				"DISABLE_DEBUG_LOGGING": true,
+				"ASOCAPIKEYSECRET":      "sdoidhjsofjsodjfi",
+				"DEL_TEXT":              "text",
+				"SOME_SECRET":           "secret text",
 			},
 			textEnv: map[string]interface{}{
 				"DISABLE_DEBUG_LOGGING": "false",
@@ -110,21 +110,45 @@ func TestKeepOriginalProps(t *testing.T) {
 				"SOME_SECRET": "some secret",
 				"NEW_SECRET":  "new secret",
 			},
-			deletedKeys: []interface{}{"DEL_TEXT", "DEL_SECRET"},
+			deletedKeys:     []interface{}{"DEL_TEXT", "DEL_SECRET"},
+			expectedMatched: []interface{}{"DISABLE_DEBUG_LOGGING", "SOME_SECRET", "DEL_TEXT"},
+			expectedNew:     []interface{}{"NEW_PROP", "NEW_SECRET", "DEL_SECRET"},
+		},
+	}
+
+	for _, c := range testcases {
+		matchedKeys, newKeys := matchEnvironmentKeys(c.currentEnv, c.textEnv, c.secretEnv, c.deletedKeys)
+		assert.Equal(t, c.expectedMatched, matchedKeys)
+		assert.Equal(t, c.expectedNew, newKeys)
+	}
+}
+
+func TestCreateOriginalProps(t *testing.T) {
+	testcases := []struct {
+		currentEnv       map[string]interface{}
+		matchedKeys      []interface{}
+		expectedOriginal []interface{}
+	}{
+		{
+			currentEnv: map[string]interface{}{
+				"DISABLE_DEBUG_LOGGING": oc.EnvProperty{Name: getStringPtr("DISABLE_DEBUG_LOGGING"), Value: getStringPtr("true"), Type: getStringPtr("TEXT")},
+				"ASOCAPIKEYSECRET":      oc.EnvProperty{Name: getStringPtr("ASOCAPIKEYSECRET"), Value: getStringPtr("sdoidhjsofjsodjfi"), Type: getStringPtr("SECURE")},
+				"DEL_TEXT":              oc.EnvProperty{Name: getStringPtr("DEL_TEXT"), Value: getStringPtr("text"), Type: getStringPtr("TEXT")},
+				"SOME_SECRET":           oc.EnvProperty{Name: getStringPtr("SOME_SECRET"), Value: getStringPtr("secret text"), Type: getStringPtr("SECURE")},
+			},
+			matchedKeys: []interface{}{"DEL_TEXT", "DISABLE_DEBUG_LOGGING", "SOME_SECRET"},
 			expectedOriginal: []interface{}{
 				map[string]interface{}{"name": "DEL_TEXT", "value": "text", "type": "TEXT"},
 				map[string]interface{}{"name": "DISABLE_DEBUG_LOGGING", "value": "true", "type": "TEXT"},
 				map[string]interface{}{"name": "SOME_SECRET", "value": "secret text", "type": "SECURE"},
 			},
-			expectedNew: []interface{}{"NEW_PROP", "NEW_SECRET", "DEL_SECRET"},
 		},
 	}
 
 	for _, c := range testcases {
-		actualOriginal, actualNew := createOriginalProps(c.currentEnv, c.textEnv, c.secretEnv, c.deletedKeys)
+		actualOriginal := createOriginalProps(c.currentEnv, c.matchedKeys)
 		// no need to sort here, method already sorts final result, which we should also be testing
 		assert.Equal(t, c.expectedOriginal, actualOriginal)
-		assert.Equal(t, c.expectedNew, actualNew)
 	}
 }
 
