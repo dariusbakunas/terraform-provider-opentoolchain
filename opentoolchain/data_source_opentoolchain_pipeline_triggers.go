@@ -12,6 +12,7 @@ import (
 func dataSourceOpenToolchainPipelineTriggers() *schema.Resource {
 	return &schema.Resource{
 		Description: "Get tekton pipline triggers",
+        DeprecationMessage: "Use opentoolchain_tekton_pipeline_config data source instead",
 		ReadContext: dataSourceOpenToolchainPipelineTriggersRead,
 		Schema: map[string]*schema.Schema{
 			"guid": {
