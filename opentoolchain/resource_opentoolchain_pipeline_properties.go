@@ -13,11 +13,12 @@ import (
 
 func resourceOpenToolchainPipelineProperties() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Update *existing* tekton pipeline properties. If property exists, it will be updated in place, otherwise new one will be added. When this resource is destroyed, original pipeline properties are restored. (WARN: using unpublished APIs)",
-		CreateContext: resourceOpenToolchainPipelinePropertiesCreate,
-		ReadContext:   resourceOpenToolchainPipelinePropertiesRead,
-		DeleteContext: resourceOpenToolchainPipelinePropertiesDelete,
-		UpdateContext: resourceOpenToolchainPipelinePropertiesUpdate,
+		Description:        "Update *existing* tekton pipeline properties. If property exists, it will be updated in place, otherwise new one will be added. When this resource is destroyed, original pipeline properties are restored. (WARN: using unpublished APIs)",
+		DeprecationMessage: "Use opentoolchain_tekton_pipeline_overrides resource instead",
+		CreateContext:      resourceOpenToolchainPipelinePropertiesCreate,
+		ReadContext:        resourceOpenToolchainPipelinePropertiesRead,
+		DeleteContext:      resourceOpenToolchainPipelinePropertiesDelete,
+		UpdateContext:      resourceOpenToolchainPipelinePropertiesUpdate,
 		Schema: map[string]*schema.Schema{
 			"guid": {
 				Description: "The tekton pipeline `guid`",
@@ -452,15 +453,15 @@ func createOriginalProps(currentEnv []oc.EnvProperty, textEnv interface{}, secre
 // we need to update original properties if new key matching current properties is added to any resource inputs
 func updateOriginalProps(currentEnv []oc.EnvProperty, textEnv interface{}, secretEnv interface{}, deletedKeys interface{}, newKeys interface{}, originalProps interface{}) (updatedOriginalProps, updatedNewKeys, deletedNewKeys []interface{}) {
 	if originalProps == nil {
-        updatedOriginalProps, updatedNewKeys =  createOriginalProps(currentEnv, textEnv, secretEnv, deletedKeys)
-        return updatedNewKeys, updatedNewKeys, nil
+		updatedOriginalProps, updatedNewKeys = createOriginalProps(currentEnv, textEnv, secretEnv, deletedKeys)
+		return updatedNewKeys, updatedNewKeys, nil
 	}
 
 	currentMap := make(map[string]oc.EnvProperty)
 	originalMap := make(map[string]interface{})
 	newKeyMap := make(map[string]interface{})
 
-    allKeys := make(map[string]bool)
+	allKeys := make(map[string]bool)
 
 	for _, p := range currentEnv {
 		currentMap[*p.Name] = p
@@ -482,7 +483,7 @@ func updateOriginalProps(currentEnv []oc.EnvProperty, textEnv interface{}, secre
 		env := textEnv.(map[string]interface{})
 
 		for key := range env {
-		    allKeys[key] = true
+			allKeys[key] = true
 			if _, ok := originalMap[key]; !ok {
 				// if we're overriding new property, make sure to save it to originals, but only if this is not new key
 				if current, ok := currentMap[key]; ok {
@@ -506,7 +507,7 @@ func updateOriginalProps(currentEnv []oc.EnvProperty, textEnv interface{}, secre
 		env := secretEnv.(map[string]interface{})
 
 		for key := range env {
-            allKeys[key] = true
+			allKeys[key] = true
 
 			if _, ok := originalMap[key]; !ok {
 				// if we're overriding new property, make sure to save it to originals, but only if this is not new key
@@ -530,7 +531,7 @@ func updateOriginalProps(currentEnv []oc.EnvProperty, textEnv interface{}, secre
 		for _, k := range deletedKeys.([]interface{}) {
 			key := k.(string)
 
-            allKeys[key] = true
+			allKeys[key] = true
 
 			if _, ok := originalMap[key]; !ok {
 				// if we're deleting new property, make sure to save it to originals, but only if this is not new key
@@ -550,12 +551,12 @@ func updateOriginalProps(currentEnv []oc.EnvProperty, textEnv interface{}, secre
 	}
 
 	for k := range newKeyMap {
-	    if _, ok := allKeys[k]; !ok {
-	        // this new property was removed
-	        delete(newKeyMap, k)
-            deletedNewKeys = append(deletedNewKeys, k)
-        }
-    }
+		if _, ok := allKeys[k]; !ok {
+			// this new property was removed
+			delete(newKeyMap, k)
+			deletedNewKeys = append(deletedNewKeys, k)
+		}
+	}
 
 	for _, original := range originalMap {
 		updatedOriginalProps = append(updatedOriginalProps, original)

@@ -238,7 +238,7 @@ func resourceOpenToolchainTektonPipelineOverridesRead(ctx context.Context, d *sc
 			result = append(result, tMap)
 		}
 
-        d.Set("trigger", result)
+		d.Set("trigger", result)
 	}
 
 	// log.Printf("[DEBUG] Read tekton pipeline: %v", dbgPrint(pipeline))
@@ -425,12 +425,12 @@ func resourceOpenToolchainTektonPipelineOverridesUpdate(ctx context.Context, d *
 
 		// if new property is deleted, we need to make sure it is removed in patch payload
 		if deletedNewKeys != nil {
-		   if deletedKeys != nil {
-		       deletedKeys = append(deletedKeys.([]interface{}), deletedNewKeys...)
-           } else {
-               deletedKeys = deletedNewKeys
-           }
-        }
+			if deletedKeys != nil {
+				deletedKeys = append(deletedKeys.([]interface{}), deletedNewKeys...)
+			} else {
+				deletedKeys = deletedNewKeys
+			}
+		}
 
 		patchOptions := &oc.PatchTektonPipelineOptions{
 			GUID:          &guid,

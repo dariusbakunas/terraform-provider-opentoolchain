@@ -12,11 +12,12 @@ import (
 
 func resourceOpenToolchainPipelineTriggers() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Update *existing* tekton pipeline triggers. If trigger exists, it will be updated in place, otherwise trigger will be ignored (adding new triggers is not supported). (WARN: using unpublished APIs)",
-		CreateContext: resourceOpenToolchainPipelineTriggersCreate,
-		ReadContext:   resourceOpenToolchainPipelineTriggersRead,
-		UpdateContext: resourceOpenToolchainPipelineTriggersUpdate,
-		DeleteContext: resourceOpenToolchainPipelineTriggersDelete,
+		Description:        "Update *existing* tekton pipeline triggers. If trigger exists, it will be updated in place, otherwise trigger will be ignored (adding new triggers is not supported). (WARN: using unpublished APIs)",
+		DeprecationMessage: "Use opentoolchain_tekton_pipeline_overrides resource instead",
+		CreateContext:      resourceOpenToolchainPipelineTriggersCreate,
+		ReadContext:        resourceOpenToolchainPipelineTriggersRead,
+		UpdateContext:      resourceOpenToolchainPipelineTriggersUpdate,
+		DeleteContext:      resourceOpenToolchainPipelineTriggersDelete,
 		Schema: map[string]*schema.Schema{
 			"guid": {
 				Description: "The tekton pipeline `guid`",
