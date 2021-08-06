@@ -385,34 +385,6 @@ func resourceOpenToolchainPipelinePropertiesUpdate(ctx context.Context, d *schem
 	return resourceOpenToolchainPipelinePropertiesRead(ctx, d, m)
 }
 
-// compares source map keys or array of strings against target map keys
-// returns a list of matched keys and new keys
-func getKeyDiff(targetMap map[string]interface{}, source interface{}) (matchedKeys, newKeys []interface{}) {
-    if m, ok := source.(map[string]interface{}); ok {
-        for k := range m {
-            if _, ok := targetMap[k]; ok {
-                matchedKeys = append(matchedKeys, k)
-                continue
-            }
-
-            newKeys = append(newKeys, k)
-        }
-    }
-
-    if arr, ok := source.([]interface{}); ok {
-        for _, k := range arr {
-            if _, ok := targetMap[k.(string)]; ok {
-                matchedKeys = append(matchedKeys, k)
-                continue
-            }
-
-            newKeys = append(newKeys, k)
-        }
-    }
-
-    return matchedKeys, newKeys
-}
-
 // we want to only retain properties that were mentioned in resource inputs, ignore the rest
 // that way if some property is updated in UI and it was never overridden in terraform, we won't "restore" to the
 // old value once this resource is destroyed
@@ -467,7 +439,7 @@ func createOriginalProps(currentEnv []oc.EnvProperty, textEnv interface{}, secre
 func updateOriginalProps(currentEnv []oc.EnvProperty, textEnv interface{}, secretEnv interface{}, deletedKeys interface{}, newKeys interface{}, originalProps interface{}) (updatedOriginalProps, updatedNewKeys, deletedNewKeys []interface{}) {
 	if originalProps == nil {
 		updatedOriginalProps, updatedNewKeys = createOriginalProps(currentEnv, textEnv, secretEnv, deletedKeys)
-		return updatedNewKeys, updatedNewKeys, nil
+		return updatedOriginalProps, updatedNewKeys, nil
 	}
 
 	currentMap := make(map[string]oc.EnvProperty)
