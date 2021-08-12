@@ -50,6 +50,11 @@ func dataSourceOpenToolchainPipelineTriggers() *schema.Resource {
 										Type:        schema.TypeString,
 										Computed:    true,
 									},
+									"pattern": {
+										Description: "Github branch pattern for scm triggers",
+										Type:        schema.TypeString,
+										Computed:    true,
+									},
 									"type": {
 										Description: "SCM type",
 										Type:        schema.TypeString,

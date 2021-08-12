@@ -2,7 +2,7 @@ module github.com/dariusbakunas/terraform-provider-opentoolchain
 
 go 1.15
 
-// replace github.com/dariusbakunas/opentoolchain-go-sdk => /Users/darius/Projects/opentoolchain-go-sdk
+//replace github.com/dariusbakunas/opentoolchain-go-sdk => /Users/darius/Projects/opentoolchain-go-sdk
 
 require (
 	github.com/IBM/go-sdk-core v1.1.0
@@ -12,9 +12,8 @@ require (
 	github.com/apparentlymart/go-cidr v1.1.0 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
 	github.com/aws/aws-sdk-go v1.37.0 // indirect
-	github.com/dariusbakunas/opentoolchain-go-sdk v0.0.0-20210805132200-53a88ff49fa5
+	github.com/dariusbakunas/opentoolchain-go-sdk v0.1.0
 	github.com/fatih/color v1.12.0 // indirect
-	github.com/form3tech-oss/jwt-go v3.2.3+incompatible // indirect
 	github.com/go-openapi/errors v0.20.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2
@@ -34,7 +33,7 @@ require (
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
 	github.com/oklog/run v1.1.0 // indirect
-	github.com/stretchr/testify v1.7.0 // indirect
+	github.com/stretchr/testify v1.7.0
 	github.com/zclconf/go-cty v1.9.0 // indirect
 	go.mongodb.org/mongo-driver v1.7.1 // indirect
 	golang.org/x/net v0.0.0-20210726213435-c6fcb2dbf985 // indirect
