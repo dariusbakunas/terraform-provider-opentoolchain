@@ -173,9 +173,17 @@ func dataSourceOpenToolchainTektonPipelineConfigRead(ctx context.Context, d *sch
 	d.Set("toolchain_guid", *pipeline.ToolchainID)
 	d.Set("toolchain_crn", *pipeline.ToolchainCRN)
 
-	d.Set("text_env", getEnvMap(pipeline.EnvProperties, "TEXT"))
-	d.Set("secret_env", getEnvMap(pipeline.EnvProperties, "SECURE"))
-	d.Set("trigger", flattenPipelineTriggers(pipeline.Triggers))
+	if err := d.Set("text_env", getEnvMap(pipeline.EnvProperties, "TEXT")); err != nil {
+	    return diag.Errorf("Error setting tekton pipline text_env: %s", err)
+    }
+
+	if err := d.Set("secret_env", getEnvMap(pipeline.EnvProperties, "SECURE")); err != nil {
+        return diag.Errorf("Error setting tekton pipline secret_env: %s", err)
+    }
+
+	if err := d.Set("trigger", flattenPipelineTriggers(pipeline.Triggers)); err != nil {
+        return diag.Errorf("Error setting tekton pipline trigger: %s", err)
+    }
 
 	d.SetId(fmt.Sprintf("%s/%s", *pipeline.ID, envID))
 
