@@ -71,6 +71,7 @@ Read-Only:
 
 - **branch** (String)
 - **hook_id** (String)
+- **pattern** (String)
 - **type** (String)
 - **url** (String)
 

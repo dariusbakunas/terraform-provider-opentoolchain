@@ -70,6 +70,11 @@ Required:
 - **enabled** (Boolean) Enable/disable the trigger
 - **name** (String) Trigger name, this is used for matching existing trigger
 
+Optional:
+
+- **branch** (String) GitHub branch
+- **pattern** (String) GitHub branch pattern, if `branch` is not specified, otherwise setting is ignored
+
 Read-Only:
 
 - **github_integration_guid** (String) Github integration ID
