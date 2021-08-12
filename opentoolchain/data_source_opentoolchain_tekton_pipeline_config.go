@@ -81,6 +81,11 @@ func dataSourceOpenToolchainTektonPipelineConfig() *schema.Resource {
 										Type:        schema.TypeString,
 										Computed:    true,
 									},
+									"pattern": {
+										Description: "Github branch pattern for scm triggers",
+										Type:        schema.TypeString,
+										Computed:    true,
+									},
 									"type": {
 										Description: "SCM type",
 										Type:        schema.TypeString,
@@ -173,9 +178,17 @@ func dataSourceOpenToolchainTektonPipelineConfigRead(ctx context.Context, d *sch
 	d.Set("toolchain_guid", *pipeline.ToolchainID)
 	d.Set("toolchain_crn", *pipeline.ToolchainCRN)
 
-	d.Set("text_env", getEnvMap(pipeline.EnvProperties, "TEXT"))
-	d.Set("secret_env", getEnvMap(pipeline.EnvProperties, "SECURE"))
-	d.Set("trigger", flattenPipelineTriggers(pipeline.Triggers))
+	if err := d.Set("text_env", getEnvMap(pipeline.EnvProperties, "TEXT")); err != nil {
+		return diag.Errorf("Error setting tekton pipline text_env: %s", err)
+	}
+
+	if err := d.Set("secret_env", getEnvMap(pipeline.EnvProperties, "SECURE")); err != nil {
+		return diag.Errorf("Error setting tekton pipline secret_env: %s", err)
+	}
+
+	if err := d.Set("trigger", flattenPipelineTriggers(pipeline.Triggers)); err != nil {
+		return diag.Errorf("Error setting tekton pipline trigger: %s", err)
+	}
 
 	d.SetId(fmt.Sprintf("%s/%s", *pipeline.ID, envID))
 
@@ -222,6 +235,10 @@ func flattenTriggerSCM(scm *oc.TektonPipelineTriggerScmSource) []interface{} {
 
 	if scm.Branch != nil {
 		s["branch"] = *scm.Branch
+	}
+
+	if scm.Pattern != nil {
+		s["pattern"] = *scm.Pattern
 	}
 
 	if scm.Type != nil {

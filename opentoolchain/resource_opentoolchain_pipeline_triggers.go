@@ -221,6 +221,28 @@ func createTriggerPatch(triggers []interface{}, currentPipelineTriggers []oc.Tek
 	for _, t := range currentPipelineTriggers {
 		if existing, ok := triggerMap[*t.Name]; ok {
 			t.Disabled = getBoolPtr(!existing["enabled"].(bool))
+			pattern := existing["pattern"].(string)
+			branch := existing["branch"].(string)
+
+			// we should not be setting branch or pattern for non-scm triggers
+			// this should be sufficient check
+			if t.ScmSource != nil {
+			    if pattern != "" && branch != "" {
+			        log.Printf("[WARN] Both trigger (%s) branch and pattern were set, branch setting will be used: %s", *t.Name, branch)
+                }
+
+				if pattern != "" {
+					t.ScmSource.Pattern = getStringPtr(pattern)
+					t.ScmSource.Branch = nil
+				}
+
+				if branch != "" {
+					t.ScmSource.Branch = getStringPtr(branch)
+					t.ScmSource.Pattern = nil
+				}
+			} else {
+				log.Printf("[WARN] Trying to set branch/pattern for non scm trigger: %s", *t.Name)
+			}
 		}
 
 		result = append(result, t)

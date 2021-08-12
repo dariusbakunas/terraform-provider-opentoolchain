@@ -93,6 +93,18 @@ func resourceOpenToolchainTektonPipelineOverrides() *schema.Resource {
 							Type:        schema.TypeString,
 							Required:    true,
 						},
+						"branch": {
+							Description: "GitHub branch",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Computed:    true,
+						},
+						"pattern": {
+							Description: "GitHub branch pattern, if `branch` is not specified, otherwise setting is ignored",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Computed:    true,
+						},
 					},
 				},
 			},
@@ -148,8 +160,6 @@ func resourceOpenToolchainTektonPipelineOverrides() *schema.Resource {
 }
 
 func resourceOpenToolchainTektonPipelineOverridesRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-
 	id := d.Id()
 	idParts := strings.Split(id, "/")
 
@@ -231,6 +241,16 @@ func resourceOpenToolchainTektonPipelineOverridesRead(ctx context.Context, d *sc
 				if pipelineTrigger.ServiceInstanceID != nil {
 					tMap["github_integration_guid"] = *pipelineTrigger.ServiceInstanceID
 				}
+
+				if pipelineTrigger.ScmSource != nil {
+					if pipelineTrigger.ScmSource.Branch != nil {
+						tMap["branch"] = *pipelineTrigger.ScmSource.Branch
+					}
+
+					if pipelineTrigger.ScmSource.Pattern != nil {
+						tMap["pattern"] = *pipelineTrigger.ScmSource.Pattern
+					}
+				}
 			} else {
 				log.Printf("[WARN] Trigger '%s' does not exist, it will be ignored", triggerName)
 			}
@@ -247,7 +267,7 @@ func resourceOpenToolchainTektonPipelineOverridesRead(ctx context.Context, d *sc
 	d.Set("toolchain_guid", *pipeline.ToolchainID)
 	d.Set("toolchain_crn", *pipeline.ToolchainCRN)
 
-	return diags
+	return nil
 }
 
 func resourceOpenToolchainTektonPipelineOverridesCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
