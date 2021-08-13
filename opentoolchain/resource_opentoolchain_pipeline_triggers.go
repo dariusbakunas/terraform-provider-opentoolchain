@@ -12,7 +12,7 @@ import (
 
 func resourceOpenToolchainPipelineTriggers() *schema.Resource {
 	return &schema.Resource{
-		Description:        "Update *existing* tekton pipeline triggers. If trigger exists, it will be updated in place, otherwise trigger will be ignored (adding new triggers is not supported). (WARN: using unpublished APIs)",
+		Description:        "Update *existing* tekton pipeline triggers. If trigger exists, it will be updated in place, otherwise trigger will be ignored (adding new triggers is not supported). (WARN: using unpublished APIs) (DEPRECATED)",
 		DeprecationMessage: "Use opentoolchain_tekton_pipeline_overrides resource instead",
 		CreateContext:      resourceOpenToolchainPipelineTriggersCreate,
 		ReadContext:        resourceOpenToolchainPipelineTriggersRead,

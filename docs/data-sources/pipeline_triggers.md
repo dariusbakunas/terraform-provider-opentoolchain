@@ -3,12 +3,12 @@
 page_title: "opentoolchain_pipeline_triggers Data Source - terraform-provider-opentoolchain"
 subcategory: ""
 description: |-
-  Get tekton pipline triggers
+  Get tekton pipline triggers (DEPRECATED)
 ---
 
 # opentoolchain_pipeline_triggers (Data Source)
 
-Get tekton pipline triggers
+Get tekton pipline triggers (DEPRECATED)
 
 ## Example Usage
 

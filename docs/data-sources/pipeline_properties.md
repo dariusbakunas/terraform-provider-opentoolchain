@@ -3,12 +3,12 @@
 page_title: "opentoolchain_pipeline_properties Data Source - terraform-provider-opentoolchain"
 subcategory: ""
 description: |-
-  Get tekton pipeline properties
+  Get tekton pipeline properties (DEPRECATED)
 ---
 
 # opentoolchain_pipeline_properties (Data Source)
 
-Get tekton pipeline properties
+Get tekton pipeline properties (DEPRECATED)
 
 
 

@@ -3,12 +3,12 @@
 page_title: "opentoolchain_pipeline_triggers Resource - terraform-provider-opentoolchain"
 subcategory: ""
 description: |-
-  Update existing tekton pipeline triggers. If trigger exists, it will be updated in place, otherwise trigger will be ignored (adding new triggers is not supported). (WARN: using unpublished APIs)
+  Update existing tekton pipeline triggers. If trigger exists, it will be updated in place, otherwise trigger will be ignored (adding new triggers is not supported). (WARN: using unpublished APIs) (DEPRECATED)
 ---
 
 # opentoolchain_pipeline_triggers (Resource)
 
-Update *existing* tekton pipeline triggers. If trigger exists, it will be updated in place, otherwise trigger will be ignored (adding new triggers is not supported). (WARN: using unpublished APIs)
+Update *existing* tekton pipeline triggers. If trigger exists, it will be updated in place, otherwise trigger will be ignored (adding new triggers is not supported). (WARN: using unpublished APIs) (DEPRECATED)
 
 ## Example Usage
 

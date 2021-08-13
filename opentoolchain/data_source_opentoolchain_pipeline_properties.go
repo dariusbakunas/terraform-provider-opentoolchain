@@ -13,7 +13,7 @@ import (
 
 func dataSourceOpenToolchainPipelineProperties() *schema.Resource {
 	return &schema.Resource{
-		Description:        "Get tekton pipeline properties",
+		Description:        "Get tekton pipeline properties (DEPRECATED)",
 		DeprecationMessage: "Use opentoolchain_tekton_pipeline_config data source instead",
 		ReadContext:        dataSourceOpenToolchainPipelinePropertiesRead,
 		Schema: map[string]*schema.Schema{
