@@ -12,10 +12,10 @@ require (
 	github.com/apparentlymart/go-cidr v1.1.0 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
 	github.com/aws/aws-sdk-go v1.37.0 // indirect
-	github.com/dariusbakunas/opentoolchain-go-sdk v0.1.0
+	github.com/dariusbakunas/opentoolchain-go-sdk v0.2.0
 	github.com/fatih/color v1.12.0 // indirect
 	github.com/go-openapi/errors v0.20.0 // indirect
-	github.com/google/uuid v1.3.0 // indirect
+	github.com/google/uuid v1.3.0
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/hashicorp/go-hclog v0.16.2 // indirect
