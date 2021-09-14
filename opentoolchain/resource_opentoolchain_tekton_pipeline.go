@@ -50,40 +50,6 @@ func resourceOpenToolchainTektonPipeline() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"definition": {
-				Description: "Tekton pipeline definition",
-				Type:        schema.TypeList,
-				MaxItems:    1,
-				Optional:    true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"github_integration_guid": {
-							Description: "The github integration `guid`",
-							Type:        schema.TypeString,
-							Required:    true,
-						},
-						"inputs": {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"branch": {
-										Description: "Github branch that contains tekton definition",
-										Type:        schema.TypeString,
-										Required:    true,
-									},
-									"path": {
-										Description: "Path to tekton definition inside Github repository",
-										Type:        schema.TypeString,
-										Optional:    true,
-										Default:     ".tekton",
-									},
-								},
-							},
-						},
-					},
-				},
-			},
 			"status": {
 				Description: "Pipeline status",
 				Type:        schema.TypeString,
