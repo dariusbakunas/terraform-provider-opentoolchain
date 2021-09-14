@@ -45,8 +45,13 @@ func resourceOpenToolchainTektonPipelineDefinition() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"github_integration_guid": {
+						"github_integration_id": {
 							Description: "Github integration ID",
+							Type:        schema.TypeString,
+							Required:    true,
+						},
+						"github_url": {
+							Description: "Github repository URL",
 							Type:        schema.TypeString,
 							Required:    true,
 						},
@@ -77,11 +82,7 @@ func resourceOpenToolchainTektonPipelineDefinitionCreate(ctx context.Context, d 
 	config := m.(*ProviderConfig)
 	c := config.OTClient
 
-	definitionInputs, err := expandDefinitionInputs(c, &envID, &toolchainID, inputs.List())
-
-	if err != nil {
-		return diag.Errorf("Error creating pipeline definition inputs: %s", err)
-	}
+	definitionInputs := expandDefinitionInputs(c, &envID, &toolchainID, inputs.List())
 
 	options := &oc.CreateTektonPipelineDefinitionOptions{
 		Inputs: definitionInputs,
@@ -159,9 +160,10 @@ func flattenPipelineInputs(i []oc.TektonPipelineInput) []interface{} {
 	for _, in := range i {
 		if *in.Type == "scm" {
 			input := map[string]interface{}{
-				"github_integration_guid": *in.ServiceInstanceID,
-				"branch":                  *in.ScmSource.Branch,
-				"path":                    *in.ScmSource.Path,
+				"github_integration_id": *in.ServiceInstanceID,
+				"branch":                *in.ScmSource.Branch,
+				"path":                  *in.ScmSource.Path,
+				"github_url":            *in.ScmSource.URL,
 			}
 
 			result = append(result, input)
@@ -172,31 +174,22 @@ func flattenPipelineInputs(i []oc.TektonPipelineInput) []interface{} {
 }
 
 // making additional call to get github integration URL, to simplify it for the user
-func expandDefinitionInputs(c *oc.OpenToolchainV1, envID *string, toolchainID *string, inputs []interface{}) ([]oc.CreateTektonPipelineDefinitionParamsInputsItem, error) {
+func expandDefinitionInputs(c *oc.OpenToolchainV1, envID *string, toolchainID *string, inputs []interface{}) []oc.CreateTektonPipelineDefinitionParamsInputsItem {
 	result := make([]oc.CreateTektonPipelineDefinitionParamsInputsItem, len(inputs))
 
 	for index, i := range inputs {
 		input := i.(map[string]interface{})
-		integrationGUID := input["github_integration_guid"].(string)
+		integrationGUID := input["github_integration_id"].(string)
 		branch := input["branch"].(string)
 		path := input["path"].(string)
-
-		ghInstance, _, err := c.GetServiceInstance(&oc.GetServiceInstanceOptions{
-			GUID:        &integrationGUID,
-			EnvID:       envID,
-			ToolchainID: toolchainID,
-		})
-
-		if err != nil {
-			return nil, err
-		}
+		url := input["github_url"].(string)
 
 		result[index] = oc.CreateTektonPipelineDefinitionParamsInputsItem{
 			Type:              getStringPtr("scm"),
 			ServiceInstanceID: &integrationGUID,
 			ScmSource: &oc.CreateTektonPipelineDefinitionParamsInputsItemScmSource{
 				Path:            &path,
-				URL:             getStringPtr(ghInstance.ServiceInstance.Parameters["repo_url"].(string)),
+				URL:             &url,
 				Type:            getStringPtr("GitHub"),
 				BlindConnection: getBoolPtr(false),
 				Branch:          &branch,
@@ -204,7 +197,7 @@ func expandDefinitionInputs(c *oc.OpenToolchainV1, envID *string, toolchainID *s
 		}
 	}
 
-	return result, nil
+	return result
 }
 
 func resourceOpenToolchainTektonPipelineDefinitionDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -227,6 +220,8 @@ func resourceOpenToolchainTektonPipelineDefinitionDelete(ctx context.Context, d 
 	if err != nil {
 		return diag.Errorf("Failed deleting tekton pipeline definition: %s", err)
 	}
+
+	d.SetId("")
 
 	return nil
 }
