@@ -28,7 +28,7 @@ func resourceOpenToolchainGithubIntegration() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 			},
-			"guid": {
+			"integration_id": {
 				Description: "The integration `guid`",
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -149,11 +149,10 @@ func resourceOpenToolchainGithubIntegrationCreate(ctx context.Context, d *schema
 	})
 
 	if err != nil {
-		// TODO: try deleting pipeline here to cleanup
 		return diag.Errorf("Unable to update Github URL: %s", err)
 	}
 
-	d.Set("guid", instanceID)
+	d.Set("integration_id", instanceID)
 	d.SetId(fmt.Sprintf("%s/%s/%s", instanceID, toolchainID, envID))
 
 	return resourceOpenToolchainGithubIntegrationRead(ctx, d, m)
@@ -169,9 +168,14 @@ func resourceOpenToolchainGithubIntegrationRead(ctx context.Context, d *schema.R
 	toolchainID := idParts[1]
 	envID := idParts[2]
 
+	d.Set("instance_id", instanceID)
+	d.Set("toolchain_id", toolchainID)
+	d.Set("env_id", envID)
+
 	config := m.(*ProviderConfig)
 	c := config.OTClient
 
+	// TODO: use GetServiceInstance call instead
 	toolchain, _, err := c.GetToolchainWithContext(ctx, &oc.GetToolchainOptions{
 		GUID:  &toolchainID,
 		EnvID: &envID,
@@ -224,7 +228,7 @@ func resourceOpenToolchainGithubIntegrationRead(ctx context.Context, d *schema.R
 func resourceOpenToolchainGithubIntegrationDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	integrationID := d.Get("guid").(string)
+	integrationID := d.Get("integration_id").(string)
 	envID := d.Get("env_id").(string)
 	toolchainID := d.Get("toolchain_id").(string)
 
@@ -246,7 +250,7 @@ func resourceOpenToolchainGithubIntegrationDelete(ctx context.Context, d *schema
 }
 
 func resourceOpenToolchainGithubIntegrationUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	instanceID := d.Get("guid").(string)
+	instanceID := d.Get("integration_id").(string)
 	envID := d.Get("env_id").(string)
 	toolchainID := d.Get("toolchain_id").(string)
 
