@@ -121,6 +121,10 @@ func resourceOpenToolchainPipelinePropertiesRead(ctx context.Context, d *schema.
 	id := d.Id()
 	idParts := strings.Split(id, "/")
 
+	if len(idParts) < 2 {
+		return diag.Errorf("Incorrect ID %s: ID should be a combination of pipelineID/envID", d.Id())
+	}
+
 	guid := idParts[0]
 	envID := idParts[1]
 
