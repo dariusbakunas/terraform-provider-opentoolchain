@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"log"
 	"strings"
 )
 
@@ -164,11 +165,11 @@ func resourceOpenToolchainIntegrationGithubRead(ctx context.Context, d *schema.R
 	id := d.Id()
 	idParts := strings.Split(id, "/")
 
-	instanceID := idParts[0]
+	integrationID := idParts[0]
 	toolchainID := idParts[1]
 	envID := idParts[2]
 
-	d.Set("integration_id", instanceID)
+	d.Set("integration_id", integrationID)
 	d.Set("toolchain_id", toolchainID)
 	d.Set("env_id", envID)
 
@@ -176,50 +177,44 @@ func resourceOpenToolchainIntegrationGithubRead(ctx context.Context, d *schema.R
 	c := config.OTClient
 
 	// TODO: use GetServiceInstance call instead
-	toolchain, _, err := c.GetToolchainWithContext(ctx, &oc.GetToolchainOptions{
-		GUID:  &toolchainID,
-		EnvID: &envID,
+	svc, resp, err := c.GetServiceInstanceWithContext(ctx, &oc.GetServiceInstanceOptions{
+		EnvID:       &envID,
+		ToolchainID: &toolchainID,
+		GUID:        &integrationID,
 	})
 
 	if err != nil {
-		return diag.Errorf("Error reading toolchain: %s", err)
-	}
-
-	// find service instance
-	found := false
-
-	if toolchain.Services != nil {
-		for _, v := range toolchain.Services {
-			if v.ServiceID != nil && *v.ServiceID == githubIntegrationServiceType && v.InstanceID != nil && *v.InstanceID == instanceID {
-				found = true
-				if v.Parameters != nil {
-					if u, ok := v.Parameters["repo_url"]; ok {
-						url := u.(string)
-						d.Set("repo_url", url)
-					}
-
-					if p, ok := v.Parameters["private_repo"]; ok {
-						private := p.(bool)
-						d.Set("private", private)
-					}
-
-					if h, ok := v.Parameters["has_issues"]; ok {
-						hasIssues := h.(bool)
-						d.Set("enable_issues", hasIssues)
-					}
-
-					if e, ok := v.Parameters["enable_traceability"]; ok {
-						enableTraceability := e.(bool)
-						d.Set("enable_traceability", enableTraceability)
-					}
-				}
-				break
-			}
+		if resp != nil && resp.StatusCode == 404 {
+			log.Printf("[WARN] Github service instance '%s' is not found, removing it from state", integrationID)
+			d.SetId("")
+			return nil
 		}
+
+		return diag.Errorf("Error reading keyprotect service instance: %s", err)
 	}
 
-	if !found {
-		return diag.Errorf("Unable to locate Github integration service instance")
+	if svc.ServiceInstance != nil && svc.ServiceInstance.Parameters != nil {
+		params := svc.ServiceInstance.Parameters
+
+		if u, ok := params["repo_url"]; ok {
+			url := u.(string)
+			d.Set("repo_url", url)
+		}
+
+		if p, ok := params["private_repo"]; ok {
+			private := p.(bool)
+			d.Set("private", private)
+		}
+
+		if h, ok := params["has_issues"]; ok {
+			hasIssues := h.(bool)
+			d.Set("enable_issues", hasIssues)
+		}
+
+		if e, ok := params["enable_traceability"]; ok {
+			enableTraceability := e.(bool)
+			d.Set("enable_traceability", enableTraceability)
+		}
 	}
 
 	return diags
