@@ -2,7 +2,7 @@ module github.com/dariusbakunas/terraform-provider-opentoolchain
 
 go 1.17
 
-replace github.com/dariusbakunas/opentoolchain-go-sdk => /Users/darius/Projects/opentoolchain-go-sdk
+//replace github.com/dariusbakunas/opentoolchain-go-sdk => /Users/darius/Projects/opentoolchain-go-sdk
 
 require (
 	github.com/IBM/go-sdk-core v1.1.0
@@ -12,7 +12,7 @@ require (
 	github.com/apparentlymart/go-cidr v1.1.0 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
 	github.com/aws/aws-sdk-go v1.37.0 // indirect
-	github.com/dariusbakunas/opentoolchain-go-sdk v0.2.0
+	github.com/dariusbakunas/opentoolchain-go-sdk v0.3.0
 	github.com/fatih/color v1.12.0 // indirect
 	github.com/go-openapi/errors v0.20.1 // indirect
 	github.com/go-openapi/strfmt v0.20.2 // indirect
