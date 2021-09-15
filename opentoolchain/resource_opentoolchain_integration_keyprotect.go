@@ -15,13 +15,13 @@ const (
 	keyProtectIntegrationServiceType = "keyprotect"
 )
 
-func resourceOpenToolchainKeyProtectIntegration() *schema.Resource {
+func resourceOpenToolchainIntegrationKeyProtect() *schema.Resource {
 	return &schema.Resource{
 		Description:   "Manage IBM KeyProtect integration (WARN: using undocumented APIs)",
-		CreateContext: resourceOpenToolchainKeyProtectIntegrationCreate,
-		ReadContext:   resourceOpenToolchainKeyProtectIntegrationRead,
-		DeleteContext: resourceOpenToolchainKeyProtectIntegrationDelete,
-		UpdateContext: resourceOpenToolchainKeyProtectIntegrationUpdate,
+		CreateContext: resourceOpenToolchainIntegrationKeyProtectCreate,
+		ReadContext:   resourceOpenToolchainIntegrationKeyProtectRead,
+		DeleteContext: resourceOpenToolchainIntegrationKeyProtectDelete,
+		UpdateContext: resourceOpenToolchainIntegrationKeyProtectUpdate,
 		Schema: map[string]*schema.Schema{
 			"toolchain_id": {
 				Description: "The toolchain `guid`",
@@ -64,7 +64,7 @@ func resourceOpenToolchainKeyProtectIntegration() *schema.Resource {
 	}
 }
 
-func resourceOpenToolchainKeyProtectIntegrationCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceOpenToolchainIntegrationKeyProtectCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	envID := d.Get("env_id").(string)
 	toolchainID := d.Get("toolchain_id").(string)
 	name := d.Get("name").(string)
@@ -139,10 +139,10 @@ func resourceOpenToolchainKeyProtectIntegrationCreate(ctx context.Context, d *sc
 	d.Set("integration_id", integrationID)
 	d.SetId(fmt.Sprintf("%s/%s/%s", integrationID, toolchainID, envID))
 
-	return resourceOpenToolchainKeyProtectIntegrationRead(ctx, d, m)
+	return resourceOpenToolchainIntegrationKeyProtectRead(ctx, d, m)
 }
 
-func resourceOpenToolchainKeyProtectIntegrationRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceOpenToolchainIntegrationKeyProtectRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	id := d.Id()
 	idParts := strings.Split(id, "/")
 
@@ -201,7 +201,7 @@ func resourceOpenToolchainKeyProtectIntegrationRead(ctx context.Context, d *sche
 	return nil
 }
 
-func resourceOpenToolchainKeyProtectIntegrationDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceOpenToolchainIntegrationKeyProtectDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	integrationID := d.Get("integration_id").(string)
 	envID := d.Get("env_id").(string)
 	toolchainID := d.Get("toolchain_id").(string)
@@ -223,7 +223,7 @@ func resourceOpenToolchainKeyProtectIntegrationDelete(ctx context.Context, d *sc
 	return nil
 }
 
-func resourceOpenToolchainKeyProtectIntegrationUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceOpenToolchainIntegrationKeyProtectUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	instanceID := d.Get("integration_id").(string)
 	envID := d.Get("env_id").(string)
 	toolchainID := d.Get("toolchain_id").(string)
@@ -268,5 +268,5 @@ func resourceOpenToolchainKeyProtectIntegrationUpdate(ctx context.Context, d *sc
 		}
 	}
 
-	return nil
+	return resourceOpenToolchainIntegrationKeyProtectRead(ctx, d, m)
 }

@@ -14,13 +14,13 @@ const (
 	githubIntegrationServiceType = "github_integrated"
 )
 
-func resourceOpenToolchainGithubIntegration() *schema.Resource {
+func resourceOpenToolchainIntegrationGithub() *schema.Resource {
 	return &schema.Resource{
 		Description:   "Manage IBM Github integration (WARN: using undocumented APIs)",
-		CreateContext: resourceOpenToolchainGithubIntegrationCreate,
-		ReadContext:   resourceOpenToolchainGithubIntegrationRead,
-		DeleteContext: resourceOpenToolchainGithubIntegrationDelete,
-		UpdateContext: resourceOpenToolchainGithubIntegrationUpdate,
+		CreateContext: resourceOpenToolchainIntegrationGithubCreate,
+		ReadContext:   resourceOpenToolchainIntegrationGithubRead,
+		DeleteContext: resourceOpenToolchainIntegrationGithubDelete,
+		UpdateContext: resourceOpenToolchainIntegrationGithubUpdate,
 		Schema: map[string]*schema.Schema{
 			"toolchain_id": {
 				Description: "The toolchain `guid`",
@@ -76,7 +76,7 @@ func resourceOpenToolchainGithubIntegration() *schema.Resource {
 	}
 }
 
-func resourceOpenToolchainGithubIntegrationCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceOpenToolchainIntegrationGithubCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	envID := d.Get("env_id").(string)
 	toolchainID := d.Get("toolchain_id").(string)
 	repoURL := d.Get("repo_url").(string)
@@ -155,10 +155,10 @@ func resourceOpenToolchainGithubIntegrationCreate(ctx context.Context, d *schema
 	d.Set("integration_id", instanceID)
 	d.SetId(fmt.Sprintf("%s/%s/%s", instanceID, toolchainID, envID))
 
-	return resourceOpenToolchainGithubIntegrationRead(ctx, d, m)
+	return resourceOpenToolchainIntegrationGithubRead(ctx, d, m)
 }
 
-func resourceOpenToolchainGithubIntegrationRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceOpenToolchainIntegrationGithubRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	id := d.Id()
@@ -225,7 +225,7 @@ func resourceOpenToolchainGithubIntegrationRead(ctx context.Context, d *schema.R
 	return diags
 }
 
-func resourceOpenToolchainGithubIntegrationDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceOpenToolchainIntegrationGithubDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	integrationID := d.Get("integration_id").(string)
@@ -249,7 +249,7 @@ func resourceOpenToolchainGithubIntegrationDelete(ctx context.Context, d *schema
 	return diags
 }
 
-func resourceOpenToolchainGithubIntegrationUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceOpenToolchainIntegrationGithubUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	instanceID := d.Get("integration_id").(string)
 	envID := d.Get("env_id").(string)
 	toolchainID := d.Get("toolchain_id").(string)
@@ -279,5 +279,5 @@ func resourceOpenToolchainGithubIntegrationUpdate(ctx context.Context, d *schema
 		}
 	}
 
-	return resourceOpenToolchainGithubIntegrationRead(ctx, d, m)
+	return resourceOpenToolchainIntegrationGithubRead(ctx, d, m)
 }
