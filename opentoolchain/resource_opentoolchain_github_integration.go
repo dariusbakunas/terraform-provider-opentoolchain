@@ -16,7 +16,7 @@ const (
 
 func resourceOpenToolchainGithubIntegration() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Manage IBM github integration (WARN: using undocumented APIs)",
+		Description:   "Manage IBM Github integration (WARN: using undocumented APIs)",
 		CreateContext: resourceOpenToolchainGithubIntegrationCreate,
 		ReadContext:   resourceOpenToolchainGithubIntegrationRead,
 		DeleteContext: resourceOpenToolchainGithubIntegrationDelete,
@@ -168,7 +168,7 @@ func resourceOpenToolchainGithubIntegrationRead(ctx context.Context, d *schema.R
 	toolchainID := idParts[1]
 	envID := idParts[2]
 
-	d.Set("instance_id", instanceID)
+	d.Set("integration_id", instanceID)
 	d.Set("toolchain_id", toolchainID)
 	d.Set("env_id", envID)
 
@@ -242,7 +242,7 @@ func resourceOpenToolchainGithubIntegrationDelete(ctx context.Context, d *schema
 	})
 
 	if err != nil {
-		return diag.Errorf("Error deleting tekton pipeline: %s", err)
+		return diag.Errorf("Error deleting Github integration: %s", err)
 	}
 
 	d.SetId("")
