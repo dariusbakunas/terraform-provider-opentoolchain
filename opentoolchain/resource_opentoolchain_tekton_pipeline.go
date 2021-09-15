@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	oc "github.com/dariusbakunas/opentoolchain-go-sdk/opentoolchainv1"
-	uuid "github.com/google/uuid"
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -158,6 +158,14 @@ func resourceOpenToolchainTektonPipeline() *schema.Resource {
 					},
 				},
 			},
+			"text_env": {
+				Description: "Pipeline environment text properties",
+				Type:        schema.TypeMap,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Optional: true,
+			},
 		},
 	}
 }
@@ -254,9 +262,12 @@ func resourceOpenToolchainTektonPipelineCreate(ctx context.Context, d *schema.Re
 		return diag.Errorf("Error creating pipeline definition: %s", err)
 	}
 
+	textEnv := d.Get("text_env").(map[string]interface{})
+
 	patchOptions := &oc.PatchTektonPipelineOptions{
 		GUID:                 &instanceID,
 		EnvID:                &envID,
+		EnvProperties:        expandTektonPipelineEnvProps(textEnv, map[string]interface{}{}), // TODO: add secrets
 		PipelineDefinitionID: definition.Definition.ID,
 		Inputs:               definition.Inputs,
 		Triggers:             expandTektonPipelineTriggers(triggers.List()),
@@ -264,6 +275,7 @@ func resourceOpenToolchainTektonPipelineCreate(ctx context.Context, d *schema.Re
 			// current pipeline defaults
 			WorkerID:   getStringPtr("public"),
 			WorkerType: getStringPtr("public"),
+			// TODO: should this be resource parameter? can we get a list of options?
 			WorkerName: getStringPtr("IBM Managed workers (Tekton Pipelines v0.20.1)"),
 		},
 	}
@@ -304,6 +316,12 @@ func resourceOpenToolchainTektonPipelineRead(ctx context.Context, d *schema.Reso
 
 	if err != nil {
 		return diag.Errorf("Error reading tekton pipeline: %s", err)
+	}
+
+	textEnv := getEnvMap(pipeline.EnvProperties, "TEXT")
+
+	if err := d.Set("text_env", textEnv); err != nil {
+		return diag.Errorf("Error setting tekton pipeline text_env")
 	}
 
 	if pipeline.Status != nil {
@@ -412,8 +430,13 @@ func resourceOpenToolchainTektonPipelineUpdate(ctx context.Context, d *schema.Re
 		patchOptions.Triggers = expandTektonPipelineTriggers(triggers.List())
 	}
 
+	if d.HasChange("text_env") {
+		textEnv := d.Get("text_env").(map[string]interface{})
+		patchOptions.EnvProperties = expandTektonPipelineEnvProps(textEnv, map[string]interface{}{}) // TODO: add secrets
+	}
+
 	// add other conditions here
-	if d.HasChange("definition") || d.HasChange("trigger") {
+	if d.HasChange("definition") || d.HasChange("trigger") || d.HasChange("text_env") {
 		_, _, err := c.PatchTektonPipelineWithContext(ctx, patchOptions)
 
 		if err != nil {
@@ -444,6 +467,24 @@ func expandTektonPipelineDefinitionInputs(c *oc.OpenToolchainV1, envID *string, 
 				BlindConnection: getBoolPtr(false),
 				Branch:          &branch,
 			},
+		}
+	}
+
+	return result
+}
+
+func expandTektonPipelineEnvProps(text map[string]interface{}, secret map[string]interface{}) []oc.EnvProperty {
+	var result []oc.EnvProperty
+
+	if text != nil {
+		for k, v := range text {
+			value := v.(string)
+
+			result = append(result, oc.EnvProperty{
+				Name:  getStringPtr(k),
+				Value: &value,
+				Type:  getStringPtr("TEXT"),
+			})
 		}
 	}
 
