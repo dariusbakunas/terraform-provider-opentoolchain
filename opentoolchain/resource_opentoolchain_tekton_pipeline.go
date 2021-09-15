@@ -166,6 +166,24 @@ func resourceOpenToolchainTektonPipeline() *schema.Resource {
 				},
 				Optional: true,
 			},
+			"secret_env": {
+				Description: "Pipeline environment secret properties, use `{vault::vault_integration_name.VAULT_KEY}` to use vault integration.",
+				Type:        schema.TypeMap,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Optional:  true,
+				Sensitive: true,
+			},
+			"encrypted_secrets": {
+				Type:        schema.TypeMap,
+				Description: "Opentoolchain API does not return actual secret values, this is used internally to track changes to encrypted strings",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Sensitive: true,
+				Computed:  true,
+			},
 		},
 	}
 }
@@ -263,11 +281,12 @@ func resourceOpenToolchainTektonPipelineCreate(ctx context.Context, d *schema.Re
 	}
 
 	textEnv := d.Get("text_env").(map[string]interface{})
+	secretEnv := d.Get("secret_env").(map[string]interface{})
 
 	patchOptions := &oc.PatchTektonPipelineOptions{
 		GUID:                 &instanceID,
 		EnvID:                &envID,
-		EnvProperties:        expandTektonPipelineEnvProps(textEnv, map[string]interface{}{}), // TODO: add secrets
+		EnvProperties:        expandTektonPipelineEnvProps(textEnv, secretEnv),
 		PipelineDefinitionID: definition.Definition.ID,
 		Inputs:               definition.Inputs,
 		Triggers:             expandTektonPipelineTriggers(triggers.List()),
@@ -280,12 +299,23 @@ func resourceOpenToolchainTektonPipelineCreate(ctx context.Context, d *schema.Re
 		},
 	}
 
-	_, _, err = c.PatchTektonPipelineWithContext(ctx, patchOptions)
+	patchedPipeline, _, err := c.PatchTektonPipelineWithContext(ctx, patchOptions)
 
 	if err != nil {
 		// TODO: try deleting pipeline here to cleanup
 		return diag.Errorf("Unable to update tekton pipeline: %s", err)
 	}
+
+	// TODO: move this to its onw fn
+	encryptedSecrets := make(map[string]string)
+
+	for _, v := range patchedPipeline.EnvProperties {
+		if *v.Type == "SECURE" {
+			encryptedSecrets[*v.Name] = *v.Value
+		}
+	}
+
+	d.Set("encrypted_secrets", encryptedSecrets)
 
 	d.Set("pipeline_id", instanceID)
 	d.SetId(fmt.Sprintf("%s/%s", instanceID, envID))
@@ -319,9 +349,43 @@ func resourceOpenToolchainTektonPipelineRead(ctx context.Context, d *schema.Reso
 	}
 
 	textEnv := getEnvMap(pipeline.EnvProperties, "TEXT")
+	secretEnv := getEnvMap(pipeline.EnvProperties, "SECURE")
 
 	if err := d.Set("text_env", textEnv); err != nil {
 		return diag.Errorf("Error setting tekton pipeline text_env")
+	}
+
+	// there is no way to get actual secret values using current apis, it only provides encrypted strings
+	// we can only detect if property is modified
+	if env, ok := d.GetOk("secret_env"); ok {
+		encryptedSecrets := d.Get("encrypted_secrets").(map[string]interface{})
+		currentSecretEnvMap := env.(map[string]interface{})
+
+		for k := range currentSecretEnvMap {
+			if newVal, ok := secretEnv[k]; ok {
+				if encryptedSecrets[k] != newVal {
+					currentSecretEnvMap[k] = newVal // encrypted value changed, using encrypted string to force update (in case of vault properties, we should see the actual change)
+				}
+			} else {
+				delete(currentSecretEnvMap, k)
+			}
+		}
+
+		if err := d.Set("secret_env", currentSecretEnvMap); err != nil {
+			return diag.Errorf("Error setting pipeline secret_env: %s", err)
+		}
+	}
+
+	encryptedSecrets := make(map[string]string)
+
+	for _, v := range pipeline.EnvProperties {
+		if *v.Type == "SECURE" {
+			encryptedSecrets[*v.Name] = *v.Value
+		}
+	}
+
+	if err := d.Set("encrypted_secrets", encryptedSecrets); err != nil {
+		return diag.Errorf("Error setting pipeline encrypted_secrets: %s", err)
 	}
 
 	if pipeline.Status != nil {
@@ -430,18 +494,29 @@ func resourceOpenToolchainTektonPipelineUpdate(ctx context.Context, d *schema.Re
 		patchOptions.Triggers = expandTektonPipelineTriggers(triggers.List())
 	}
 
-	if d.HasChange("text_env") {
+	if d.HasChange("text_env") || d.HasChange("secret_env") {
 		textEnv := d.Get("text_env").(map[string]interface{})
-		patchOptions.EnvProperties = expandTektonPipelineEnvProps(textEnv, map[string]interface{}{}) // TODO: add secrets
+		secretEnv := d.Get("secret_env").(map[string]interface{})
+		patchOptions.EnvProperties = expandTektonPipelineEnvProps(textEnv, secretEnv)
 	}
 
 	// add other conditions here
-	if d.HasChange("definition") || d.HasChange("trigger") || d.HasChange("text_env") {
-		_, _, err := c.PatchTektonPipelineWithContext(ctx, patchOptions)
+	if d.HasChange("definition") || d.HasChange("trigger") || d.HasChange("text_env") || d.HasChange("secret_env") {
+		patchedPipeline, _, err := c.PatchTektonPipelineWithContext(ctx, patchOptions)
 
 		if err != nil {
 			return diag.Errorf("Failed updating tekton pipeline: %s", err)
 		}
+
+		encryptedSecrets := make(map[string]string)
+
+		for _, v := range patchedPipeline.EnvProperties {
+			if *v.Type == "SECURE" {
+				encryptedSecrets[*v.Name] = *v.Value
+			}
+		}
+
+		d.Set("encrypted_secrets", encryptedSecrets)
 	}
 
 	return resourceOpenToolchainTektonPipelineRead(ctx, d, m)
@@ -484,6 +559,18 @@ func expandTektonPipelineEnvProps(text map[string]interface{}, secret map[string
 				Name:  getStringPtr(k),
 				Value: &value,
 				Type:  getStringPtr("TEXT"),
+			})
+		}
+	}
+
+	if secret != nil {
+		for k, v := range secret {
+			value := v.(string)
+
+			result = append(result, oc.EnvProperty{
+				Name:  getStringPtr(k),
+				Value: &value,
+				Type:  getStringPtr("SECURE"),
 			})
 		}
 	}

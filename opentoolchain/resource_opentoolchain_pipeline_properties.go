@@ -385,7 +385,9 @@ func resourceOpenToolchainPipelinePropertiesUpdate(ctx context.Context, d *schem
 				}
 			}
 
-			d.Set("encrypted_secrets", encryptedSecrets)
+			if err := d.Set("encrypted_secrets", encryptedSecrets); err != nil {
+				return diag.Errorf("Error setting pipeline encrypted_secrets: %s", err)
+			}
 		}
 
 		// remove any values from original_properties that are no longer overridden
