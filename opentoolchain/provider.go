@@ -74,6 +74,7 @@ func Provider() *schema.Provider {
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"opentoolchain_toolchain":              dataSourceOpenToolchainToolchain(),
+			"opentoolchain_integration_github":     dataSourceOpenToolchainIntegrationGithub(),
 			"opentoolchain_pipeline_properties":    dataSourceOpenToolchainPipelineProperties(),
 			"opentoolchain_pipeline_triggers":      dataSourceOpenToolchainPipelineTriggers(),
 			"opentoolchain_tekton_pipeline_config": dataSourceOpenToolchainTektonPipelineConfig(),

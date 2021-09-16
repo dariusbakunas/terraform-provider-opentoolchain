@@ -160,8 +160,6 @@ func resourceOpenToolchainIntegrationGithubCreate(ctx context.Context, d *schema
 }
 
 func resourceOpenToolchainIntegrationGithubRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-
 	id := d.Id()
 	idParts := strings.Split(id, "/")
 
@@ -176,7 +174,6 @@ func resourceOpenToolchainIntegrationGithubRead(ctx context.Context, d *schema.R
 	config := m.(*ProviderConfig)
 	c := config.OTClient
 
-	// TODO: use GetServiceInstance call instead
 	svc, resp, err := c.GetServiceInstanceWithContext(ctx, &oc.GetServiceInstanceOptions{
 		EnvID:       &envID,
 		ToolchainID: &toolchainID,
@@ -190,7 +187,7 @@ func resourceOpenToolchainIntegrationGithubRead(ctx context.Context, d *schema.R
 			return nil
 		}
 
-		return diag.Errorf("Error reading keyprotect service instance: %s", err)
+		return diag.Errorf("Error reading github service instance: %s", err)
 	}
 
 	if svc.ServiceInstance != nil && svc.ServiceInstance.Parameters != nil {
@@ -217,7 +214,7 @@ func resourceOpenToolchainIntegrationGithubRead(ctx context.Context, d *schema.R
 		}
 	}
 
-	return diags
+	return nil
 }
 
 func resourceOpenToolchainIntegrationGithubDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
