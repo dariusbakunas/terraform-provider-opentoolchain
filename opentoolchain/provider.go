@@ -79,6 +79,7 @@ func Provider() *schema.Provider {
 			"opentoolchain_integration_slack":      dataSourceOpenToolchainIntegrationSlack(),
 			"opentoolchain_pipeline_properties":    dataSourceOpenToolchainPipelineProperties(),
 			"opentoolchain_pipeline_triggers":      dataSourceOpenToolchainPipelineTriggers(),
+			"opentoolchain_tekton_pipeline":        dataSourceOpenToolchainTektonPipeline(),
 			"opentoolchain_tekton_pipeline_config": dataSourceOpenToolchainTektonPipelineConfig(),
 		},
 		ConfigureContextFunc: providerConfigure,

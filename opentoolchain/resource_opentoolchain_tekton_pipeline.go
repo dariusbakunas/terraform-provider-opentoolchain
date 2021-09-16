@@ -324,8 +324,6 @@ func resourceOpenToolchainTektonPipelineCreate(ctx context.Context, d *schema.Re
 }
 
 func resourceOpenToolchainTektonPipelineRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-
 	id := d.Id()
 	idParts := strings.Split(id, "/")
 
@@ -400,15 +398,19 @@ func resourceOpenToolchainTektonPipelineRead(ctx context.Context, d *schema.Reso
 		d.Set("toolchain_id", *pipeline.ToolchainID)
 	}
 
+	if pipeline.Name != nil {
+		d.Set("name", *pipeline.Name)
+	}
+
 	if err = d.Set("definition", flattenTektonPipelineDefinition(pipeline.Inputs)); err != nil {
 		return diag.Errorf("Error setting pipeline definition inputs: %s", err)
 	}
 
 	if err = d.Set("trigger", flattenTektonPipelineTriggers(pipeline.Triggers)); err != nil {
-		return diag.Errorf("Error setting pipeline definition inputs: %s", err)
+		return diag.Errorf("Error setting pipeline triggers: %s", err)
 	}
 
-	return diags
+	return nil
 }
 
 func resourceOpenToolchainTektonPipelineDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
