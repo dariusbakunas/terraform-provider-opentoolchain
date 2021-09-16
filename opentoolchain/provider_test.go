@@ -12,14 +12,31 @@ var testAccProviders map[string]*schema.Provider
 var testAccProvider *schema.Provider
 
 var resourceGroupID string
+var resourceGroupName string
+var ibmRepoURL string
+var envID string
 
 const testResourcePrefix = "tf_acc_test"
 
 func init() {
 	resourceGroupID = os.Getenv("RESOURCE_GROUP_ID")
+	resourceGroupName = os.Getenv("RESOURCE_GROUP_NAME")
+	ibmRepoURL = os.Getenv("IBM_REPO_URL")
+	envID = os.Getenv("ENV_ID")
+
 	if resourceGroupID == "" {
 		resourceGroupID = "f6e4cda2a2844978aeeca5a44b584646"
 		log.Printf("[INFO] Set the environment variable RESOURCE_GROUP_ID for testing Open Toolchain resources else it is set to default '%s'", resourceGroupID)
+	}
+
+	if resourceGroupName == "" {
+		resourceGroupName = "test-resource-group"
+		log.Printf("[INFO] Set the environment variable RESOURCE_GROUP_NAME for testing Open Toolchain resources else it is set to default '%s'", resourceGroupName)
+	}
+
+	if envID == "" {
+		envID = "ibm:yp:us-east"
+		log.Printf("[INFO] Set the environment variable ENV_ID for testing Open Toolchain resources else it is set to default '%s'", envID)
 	}
 }
 
