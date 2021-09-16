@@ -184,7 +184,7 @@ func resourceOpenToolchainIntegrationSlackCreate(ctx context.Context, d *schema.
 	}
 
 	if integrationID == "" {
-		// no way to cleanup since we don't know pipeline GUID
+		// no way to cleanup since we don't know slack integration GUID
 		return diag.Errorf("Unable to determine Slack integration GUID")
 	}
 

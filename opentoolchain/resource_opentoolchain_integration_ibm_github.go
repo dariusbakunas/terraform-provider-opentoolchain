@@ -135,7 +135,7 @@ func resourceOpenToolchainIntegrationIBMGithubCreate(ctx context.Context, d *sch
 	}
 
 	if instanceID == "" {
-		// no way to cleanup since we don't know pipeline GUID
+		// no way to cleanup since we don't know github integration GUID
 		return diag.Errorf("Unable to determine Github integration GUID")
 	}
 

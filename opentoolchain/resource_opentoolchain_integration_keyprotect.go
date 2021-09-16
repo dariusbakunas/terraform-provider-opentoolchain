@@ -118,7 +118,7 @@ func resourceOpenToolchainIntegrationKeyProtectCreate(ctx context.Context, d *sc
 	}
 
 	if integrationID == "" {
-		// no way to cleanup since we don't know pipeline GUID
+		// no way to cleanup since we don't know keyprotect integration GUID
 		return diag.Errorf("Unable to determine KeyProtect integration GUID")
 	}
 
