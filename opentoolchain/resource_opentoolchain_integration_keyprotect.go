@@ -136,7 +136,6 @@ func resourceOpenToolchainIntegrationKeyProtectCreate(ctx context.Context, d *sc
 		return diag.Errorf("Unable to update Github URL: %s", err)
 	}
 
-	d.Set("integration_id", integrationID)
 	d.SetId(fmt.Sprintf("%s/%s/%s", integrationID, toolchainID, envID))
 
 	return resourceOpenToolchainIntegrationKeyProtectRead(ctx, d, m)
@@ -266,6 +265,12 @@ func resourceOpenToolchainIntegrationKeyProtectUpdate(ctx context.Context, d *sc
 		if err != nil {
 			return diag.Errorf("Unable to update KeyProtect integration: %s", err)
 		}
+	}
+
+	_, err := c.PatchServiceInstanceWithContext(ctx, options)
+
+	if err != nil {
+		return diag.Errorf("Unable to update KeyProtect integration: %s", err)
 	}
 
 	return resourceOpenToolchainIntegrationKeyProtectRead(ctx, d, m)

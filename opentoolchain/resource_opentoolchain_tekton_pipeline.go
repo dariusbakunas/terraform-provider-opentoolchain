@@ -167,7 +167,7 @@ func resourceOpenToolchainTektonPipeline() *schema.Resource {
 				Optional: true,
 			},
 			"secret_env": {
-				Description: "Pipeline environment secret properties, use `{vault::vault_integration_name.VAULT_KEY}` to use vault integration.",
+				Description: "Pipeline environment secret properties, use `{vault::vault_integration_name.VAULT_KEY}` with vault integration.",
 				Type:        schema.TypeMap,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -364,7 +364,7 @@ func resourceOpenToolchainTektonPipelineRead(ctx context.Context, d *schema.Reso
 		for k := range currentSecretEnvMap {
 			if newVal, ok := secretEnv[k]; ok {
 				if encryptedSecrets[k] != newVal {
-					currentSecretEnvMap[k] = newVal // encrypted value changed, using encrypted string to force update (in case of vault properties, we should see the actual change)
+					currentSecretEnvMap[k] = newVal // encrypted value changed, using encrypted string to force update
 				}
 			} else {
 				delete(currentSecretEnvMap, k)

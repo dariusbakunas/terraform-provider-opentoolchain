@@ -12,7 +12,7 @@ require (
 	github.com/apparentlymart/go-cidr v1.1.0 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
 	github.com/aws/aws-sdk-go v1.37.0 // indirect
-	github.com/dariusbakunas/opentoolchain-go-sdk v0.3.0
+	github.com/dariusbakunas/opentoolchain-go-sdk v0.4.0
 	github.com/fatih/color v1.12.0 // indirect
 	github.com/go-openapi/errors v0.20.1 // indirect
 	github.com/go-openapi/strfmt v0.20.2 // indirect
