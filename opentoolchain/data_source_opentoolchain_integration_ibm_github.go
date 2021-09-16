@@ -8,10 +8,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func dataSourceOpenToolchainIntegrationGithub() *schema.Resource {
+func dataSourceOpenToolchainIntegrationIBMGithub() *schema.Resource {
 	return &schema.Resource{
 		Description: "Get IBM Github integration information (WARN: using undocumented APIs)",
-		ReadContext: dataSourceOpenToolchainIntegrationGithubRead,
+		ReadContext: dataSourceOpenToolchainIntegrationIBMGithubRead,
 		Schema: map[string]*schema.Schema{
 			"toolchain_id": {
 				Description: "The toolchain `guid`",
@@ -53,7 +53,7 @@ func dataSourceOpenToolchainIntegrationGithub() *schema.Resource {
 	}
 }
 
-func dataSourceOpenToolchainIntegrationGithubRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceOpenToolchainIntegrationIBMGithubRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	envID := d.Get("env_id").(string)
 	toolchainID := d.Get("toolchain_id").(string)
 	integrationID := d.Get("integration_id").(string)
