@@ -133,7 +133,8 @@ func resourceOpenToolchainIntegrationKeyProtectCreate(ctx context.Context, d *sc
 	})
 
 	if err != nil {
-		return diag.Errorf("Unable to update Github URL: %s", err)
+		// TODO: now that we have integration ID, try cleaning up
+		return diag.Errorf("Unable to update KeyProtect integration name: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s/%s", integrationID, toolchainID, envID))

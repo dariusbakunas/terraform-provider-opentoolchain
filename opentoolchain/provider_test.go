@@ -14,6 +14,7 @@ var testAccProvider *schema.Provider
 var resourceGroupID string
 var resourceGroupName string
 var ibmRepoURL string
+var kpInstanceName string
 var envID string
 
 const testResourcePrefix = "tf_acc_test"
@@ -22,6 +23,7 @@ func init() {
 	resourceGroupID = os.Getenv("RESOURCE_GROUP_ID")
 	resourceGroupName = os.Getenv("RESOURCE_GROUP_NAME")
 	ibmRepoURL = os.Getenv("IBM_REPO_URL")
+	kpInstanceName = os.Getenv("KP_INSTANCE_NAME")
 	envID = os.Getenv("ENV_ID")
 
 	if resourceGroupID == "" {
@@ -54,5 +56,9 @@ func testAccPreCheck(t *testing.T) {
 
 	if apiKey == "" && accessToken == "" {
 		t.Fatal("IAM_API_KEY or IAM_ACCESS_TOKEN env must be set for acceptance tests")
+	}
+
+	if resourceGroupName == "" || resourceGroupID == "" {
+		t.Fatal("RESOURCE_GROUP_NAME and RESOURCE_GROUP_ID must be set for acceptance tests")
 	}
 }
