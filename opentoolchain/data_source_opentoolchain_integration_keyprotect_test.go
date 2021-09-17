@@ -27,7 +27,7 @@ func TestAccOpenToolchainIntegrationKeyProtectDataSource_basic(t *testing.T) {
 	})
 }
 
-func setupOpenToolchainIntegrationKeyProtectDataSourceConfig(envID, toolchainName, resourceGroupID, kpInstanceName,  rgName string) string {
+func setupOpenToolchainIntegrationKeyProtectDataSourceConfig(envID, toolchainName, resourceGroupID, kpInstanceName, rgName string) string {
 	return fmt.Sprintf(`
 		resource "opentoolchain_toolchain" "tc" {
 			env_id            = "%s"
