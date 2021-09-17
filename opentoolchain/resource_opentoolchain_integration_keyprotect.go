@@ -22,6 +22,9 @@ func resourceOpenToolchainIntegrationKeyProtect() *schema.Resource {
 		ReadContext:   resourceOpenToolchainIntegrationKeyProtectRead,
 		DeleteContext: resourceOpenToolchainIntegrationKeyProtectDelete,
 		UpdateContext: resourceOpenToolchainIntegrationKeyProtectUpdate,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"toolchain_id": {
 				Description: "The toolchain `guid`",

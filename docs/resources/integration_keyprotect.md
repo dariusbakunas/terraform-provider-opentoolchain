@@ -43,4 +43,10 @@ resource "opentoolchain_integration_keyprotect" "kp" {
 
 - **integration_id** (String) The integration `guid`
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+terraform import opentoolchain_integration_keyprotect.kp <integration_id>/<toolchain_id>/<env_id>
+```
