@@ -59,4 +59,10 @@ Optional:
 - **toolchain_bind** (Boolean) Send slack notification when integration is created
 - **toolchain_unbind** (Boolean) Send slack notification when integration is removed
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+terraform import opentoolchain_integration_slack.sl <integration_id>/<toolchain_id>/<env_id>
+```
