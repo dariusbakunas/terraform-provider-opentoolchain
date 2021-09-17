@@ -227,9 +227,9 @@ func createTriggerPatch(triggers []interface{}, currentPipelineTriggers []oc.Tek
 			// we should not be setting branch or pattern for non-scm triggers
 			// this should be sufficient check
 			if t.ScmSource != nil {
-			    if pattern != "" && branch != "" {
-			        log.Printf("[WARN] Both trigger (%s) branch and pattern were set, branch setting will be used: %s", *t.Name, branch)
-                }
+				if pattern != "" && branch != "" {
+					log.Printf("[WARN] Both trigger (%s) branch and pattern were set, branch setting will be used: %s", *t.Name, branch)
+				}
 
 				if pattern != "" {
 					t.ScmSource.Pattern = getStringPtr(pattern)

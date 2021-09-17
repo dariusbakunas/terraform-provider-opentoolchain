@@ -57,8 +57,8 @@ resource "opentoolchain_toolchain" "tc" {
 - **repository_token** (String) If you are using a private GitHub or GitLab repository to host your template repo you will need to provide a personal access token
 - **tags** (Set of String)
 - **template_branch** (String) The Git branch name that the template will be read from
-- **template_properties** (Map of String) Additional properties that are used by the template
-- **template_repository** (String) The Git repository that the template will be read from
+- **template_properties** (Map of String) Additional properties that are used by the template (leave empty if using without the template)
+- **template_repository** (String) The Git repository that the template will be read from (leave empty if using without the template)
 
 ### Read-Only
 

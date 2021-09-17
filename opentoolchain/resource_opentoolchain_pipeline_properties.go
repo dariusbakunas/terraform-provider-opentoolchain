@@ -121,6 +121,10 @@ func resourceOpenToolchainPipelinePropertiesRead(ctx context.Context, d *schema.
 	id := d.Id()
 	idParts := strings.Split(id, "/")
 
+	if len(idParts) < 2 {
+		return diag.Errorf("Incorrect ID %s: ID should be a combination of pipelineID/envID", d.Id())
+	}
+
 	guid := idParts[0]
 	envID := idParts[1]
 
@@ -381,7 +385,9 @@ func resourceOpenToolchainPipelinePropertiesUpdate(ctx context.Context, d *schem
 				}
 			}
 
-			d.Set("encrypted_secrets", encryptedSecrets)
+			if err := d.Set("encrypted_secrets", encryptedSecrets); err != nil {
+				return diag.Errorf("Error setting pipeline encrypted_secrets: %s", err)
+			}
 		}
 
 		// remove any values from original_properties that are no longer overridden

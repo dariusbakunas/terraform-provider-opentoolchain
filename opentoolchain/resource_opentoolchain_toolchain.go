@@ -44,7 +44,7 @@ func resourceOpenToolchainToolchain() *schema.Resource {
 				ForceNew:    true,
 			},
 			"template_repository": {
-				Description: "The Git repository that the template will be read from",
+				Description: "The Git repository that the template will be read from (leave empty if using without the template)",
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
@@ -80,7 +80,7 @@ func resourceOpenToolchainToolchain() *schema.Resource {
 				Computed:    true,
 			},
 			"template_properties": {
-				Description: "Additional properties that are used by the template",
+				Description: "Additional properties that are used by the template (leave empty if using without the template)",
 				Type:        schema.TypeMap,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -242,6 +242,8 @@ func resourceOpenToolchainToolchainCreate(ctx context.Context, d *schema.Resourc
 
 	guid := extractGuid(location)
 	d.Set("guid", guid)
+
+	// TODO: this will need envID for import support (breaking change)
 	d.SetId(guid)
 
 	if name, ok := d.GetOk("name"); ok {
