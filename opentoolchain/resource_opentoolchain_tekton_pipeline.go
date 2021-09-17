@@ -23,6 +23,9 @@ func resourceOpenToolchainTektonPipeline() *schema.Resource {
 		ReadContext:   resourceOpenToolchainTektonPipelineRead,
 		DeleteContext: resourceOpenToolchainTektonPipelineDelete,
 		UpdateContext: resourceOpenToolchainTektonPipelineUpdate,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"pipeline_id": {
 				Description: "The tekton pipeline `guid`",
@@ -317,7 +320,6 @@ func resourceOpenToolchainTektonPipelineCreate(ctx context.Context, d *schema.Re
 
 	d.Set("encrypted_secrets", encryptedSecrets)
 
-	d.Set("pipeline_id", instanceID)
 	d.SetId(fmt.Sprintf("%s/%s", instanceID, envID))
 
 	return resourceOpenToolchainTektonPipelineRead(ctx, d, m)
@@ -333,6 +335,9 @@ func resourceOpenToolchainTektonPipelineRead(ctx context.Context, d *schema.Reso
 
 	pipelineID := idParts[0]
 	envID := idParts[1]
+
+	d.Set("pipeline_id", pipelineID)
+	d.Set("env_id", envID)
 
 	config := m.(*ProviderConfig)
 	c := config.OTClient

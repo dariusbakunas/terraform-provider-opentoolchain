@@ -115,4 +115,10 @@ Read-Only:
 
 - **id** (String) Trigger ID
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+terraform import opentoolchain_tekton_pipeline.tp <pipeline_id>/<env_id>
+```
