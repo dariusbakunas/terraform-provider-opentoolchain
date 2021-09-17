@@ -242,6 +242,8 @@ func resourceOpenToolchainToolchainCreate(ctx context.Context, d *schema.Resourc
 
 	guid := extractGuid(location)
 	d.Set("guid", guid)
+
+	// TODO: this will need envID for import support (breaking change)
 	d.SetId(guid)
 
 	if name, ok := d.GetOk("name"); ok {
