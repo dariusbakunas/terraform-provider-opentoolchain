@@ -8,7 +8,7 @@ import (
 )
 
 func TestAccOpenToolchainIntegrationIBMGithubDataSource_basic(t *testing.T) {
-	toolchainName := fmt.Sprintf("%s_app_%d", testResourcePrefix, acctest.RandIntRange(10, 100))
+	toolchainName := fmt.Sprintf("%s_gh_%d", testResourcePrefix, acctest.RandIntRange(10, 100))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },

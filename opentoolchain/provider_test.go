@@ -16,6 +16,9 @@ var resourceGroupName string
 var ibmRepoURL string
 var kpInstanceName string
 var envID string
+var slackWebhookURL string
+var slackChannelName string
+var slackTeamName string
 
 const testResourcePrefix = "tf_acc_test"
 
@@ -25,6 +28,9 @@ func init() {
 	ibmRepoURL = os.Getenv("IBM_REPO_URL")
 	kpInstanceName = os.Getenv("KP_INSTANCE_NAME")
 	envID = os.Getenv("ENV_ID")
+	slackWebhookURL = os.Getenv("SLACK_WEBHOOK_URL")
+	slackChannelName = os.Getenv("SLACK_CHANNEL_NAME")
+	slackTeamName = os.Getenv("SLACK_TEAM_NAME")
 
 	if resourceGroupID == "" {
 		resourceGroupID = "f6e4cda2a2844978aeeca5a44b584646"

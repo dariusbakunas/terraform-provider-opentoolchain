@@ -8,7 +8,7 @@ import (
 )
 
 func TestAccOpenToolchainIntegrationKeyProtectDataSource_basic(t *testing.T) {
-	toolchainName := fmt.Sprintf("%s_app_%d", testResourcePrefix, acctest.RandIntRange(10, 100))
+	toolchainName := fmt.Sprintf("%s_kp_%d", testResourcePrefix, acctest.RandIntRange(10, 100))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
