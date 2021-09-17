@@ -6,7 +6,7 @@ go 1.17
 
 require (
 	github.com/IBM/go-sdk-core v1.1.0
-	github.com/IBM/go-sdk-core/v5 v5.6.4 // indirect
+	github.com/IBM/go-sdk-core/v5 v5.6.5 // indirect
 	github.com/IBM/platform-services-go-sdk v0.20.1
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-cidr v1.1.0 // indirect
@@ -35,17 +35,17 @@ require (
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
-	github.com/mitchellh/mapstructure v1.4.1 // indirect
+	github.com/mitchellh/mapstructure v1.4.2 // indirect
 	github.com/oklog/run v1.1.0 // indirect
 	github.com/stretchr/testify v1.7.0
 	github.com/zclconf/go-cty v1.9.1 // indirect
 	go.mongodb.org/mongo-driver v1.7.2 // indirect
-	golang.org/x/net v0.0.0-20210913180222-943fd674d43e // indirect
-	golang.org/x/sys v0.0.0-20210910150752-751e447fb3d0 // indirect
+	golang.org/x/net v0.0.0-20210917163549-3c21e5b27794 // indirect
+	golang.org/x/sys v0.0.0-20210917161153-d61c044b1678 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/api v0.34.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20210909211513-a8c4777a87af // indirect
+	google.golang.org/genproto v0.0.0-20210917145530-b395a37504d4 // indirect
 )
 
 require (
