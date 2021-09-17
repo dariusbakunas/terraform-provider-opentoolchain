@@ -3,12 +3,12 @@
 page_title: "opentoolchain_tekton_pipeline Data Source - terraform-provider-opentoolchain"
 subcategory: ""
 description: |-
-  
+  Get tekton pipeline information
 ---
 
 # opentoolchain_tekton_pipeline (Data Source)
 
-
+Get tekton pipeline information
 
 ## Example Usage
 

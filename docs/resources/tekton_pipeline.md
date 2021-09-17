@@ -3,12 +3,12 @@
 page_title: "opentoolchain_tekton_pipeline Resource - terraform-provider-opentoolchain"
 subcategory: ""
 description: |-
-  Manage tekton pipeline (WARN: using undocumented APIs)
+  Manage tekton pipeline, do not use this in conjunction with opentoolchain_tekton_pipeline_overrides or you may get inconsistent results (WARN: using undocumented APIs)
 ---
 
 # opentoolchain_tekton_pipeline (Resource)
 
-Manage tekton pipeline (WARN: using undocumented APIs)
+Manage tekton pipeline, do not use this in conjunction with `opentoolchain_tekton_pipeline_overrides` or you may get inconsistent results (WARN: using undocumented APIs)
 
 ## Example Usage
 

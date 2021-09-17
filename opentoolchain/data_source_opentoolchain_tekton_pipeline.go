@@ -10,6 +10,7 @@ import (
 
 func dataSourceOpenToolchainTektonPipeline() *schema.Resource {
 	return &schema.Resource{
+		Description: "Get tekton pipeline information",
 		ReadContext: dataSourceOpenToolchainTektonPipelineRead,
 		Schema: map[string]*schema.Schema{
 			"pipeline_id": {

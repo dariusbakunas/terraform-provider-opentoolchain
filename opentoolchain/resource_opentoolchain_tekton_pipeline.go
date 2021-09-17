@@ -18,7 +18,7 @@ const (
 
 func resourceOpenToolchainTektonPipeline() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Manage tekton pipeline (WARN: using undocumented APIs)",
+		Description:   "Manage tekton pipeline, do not use this in conjunction with `opentoolchain_tekton_pipeline_overrides` or you may get inconsistent results (WARN: using undocumented APIs)",
 		CreateContext: resourceOpenToolchainTektonPipelineCreate,
 		ReadContext:   resourceOpenToolchainTektonPipelineRead,
 		DeleteContext: resourceOpenToolchainTektonPipelineDelete,
