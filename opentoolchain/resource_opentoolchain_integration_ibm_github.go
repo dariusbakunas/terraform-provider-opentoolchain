@@ -22,6 +22,9 @@ func resourceOpenToolchainIntegrationIBMGithub() *schema.Resource {
 		ReadContext:   resourceOpenToolchainIntegrationIBMGithubRead,
 		DeleteContext: resourceOpenToolchainIntegrationIBMGithubDelete,
 		UpdateContext: resourceOpenToolchainIntegrationIBMGithubUpdate,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"toolchain_id": {
 				Description: "The toolchain `guid`",

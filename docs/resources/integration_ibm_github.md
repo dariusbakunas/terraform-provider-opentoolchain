@@ -41,4 +41,10 @@ resource "opentoolchain_integration_ibm_github" "gt" {
 
 - **integration_id** (String) The integration `guid`
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+terraform import opentoolchain_integration_ibm_github.gh <integration_id>/<toolchain_id>/<env_id>
+```
