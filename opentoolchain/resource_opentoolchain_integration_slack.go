@@ -17,7 +17,7 @@ const (
 
 func resourceOpenToolchainIntegrationSlack() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Manage IBM Slack integration (WARN: using undocumented APIs)",
+		Description:   "Manage Slack integration (WARN: using undocumented APIs)",
 		CreateContext: resourceOpenToolchainIntegrationSlackCreate,
 		ReadContext:   resourceOpenToolchainIntegrationSlackRead,
 		DeleteContext: resourceOpenToolchainIntegrationSlackDelete,
@@ -216,7 +216,7 @@ func resourceOpenToolchainIntegrationSlackRead(ctx context.Context, d *schema.Re
 	idParts := strings.Split(id, "/")
 
 	if len(idParts) < 3 {
-		return diag.Errorf("Incorrect ID %s: ID should be a combination of integrationID/pipelineID/envID", d.Id())
+		return diag.Errorf("Incorrect ID %s: ID should be a combination of integrationID/toolchainID/envID", d.Id())
 	}
 
 	integrationID := idParts[0]

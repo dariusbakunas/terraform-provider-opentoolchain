@@ -65,6 +65,7 @@ func Provider() *schema.Provider {
 		ResourcesMap: map[string]*schema.Resource{
 			"opentoolchain_integration_ibm_github":    resourceOpenToolchainIntegrationIBMGithub(),
 			"opentoolchain_integration_keyprotect":    resourceOpenToolchainIntegrationKeyProtect(),
+			"opentoolchain_integration_pagerduty":     resourceOpenToolchainIntegrationPagerDuty(),
 			"opentoolchain_integration_slack":         resourceOpenToolchainIntegrationSlack(),
 			"opentoolchain_toolchain":                 resourceOpenToolchainToolchain(),
 			"opentoolchain_pipeline_properties":       resourceOpenToolchainPipelineProperties(),
