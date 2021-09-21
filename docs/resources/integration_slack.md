@@ -3,12 +3,12 @@
 page_title: "opentoolchain_integration_slack Resource - terraform-provider-opentoolchain"
 subcategory: ""
 description: |-
-  Manage IBM Slack integration (WARN: using undocumented APIs)
+  Manage Slack integration (WARN: using undocumented APIs)
 ---
 
 # opentoolchain_integration_slack (Resource)
 
-Manage IBM Slack integration (WARN: using undocumented APIs)
+Manage Slack integration (WARN: using undocumented APIs)
 
 ## Example Usage
 
