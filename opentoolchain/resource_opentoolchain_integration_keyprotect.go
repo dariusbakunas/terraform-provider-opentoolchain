@@ -150,7 +150,7 @@ func resourceOpenToolchainIntegrationKeyProtectRead(ctx context.Context, d *sche
 	idParts := strings.Split(id, "/")
 
 	if len(idParts) < 3 {
-		return diag.Errorf("Incorrect ID %s: ID should be a combination of integrationID/pipelineID/envID", d.Id())
+		return diag.Errorf("Incorrect ID %s: ID should be a combination of integrationID/toolchainID/envID", d.Id())
 	}
 
 	integrationID := idParts[0]
