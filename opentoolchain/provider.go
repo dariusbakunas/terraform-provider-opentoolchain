@@ -77,6 +77,7 @@ func Provider() *schema.Provider {
 			"opentoolchain_toolchain":              dataSourceOpenToolchainToolchain(),
 			"opentoolchain_integration_ibm_github": dataSourceOpenToolchainIntegrationIBMGithub(),
 			"opentoolchain_integration_keyprotect": dataSourceOpenToolchainIntegrationKeyProtect(),
+			"opentoolchain_integration_pagerduty":  dataSourceOpenToolchainIntegrationPagerDuty(),
 			"opentoolchain_integration_slack":      dataSourceOpenToolchainIntegrationSlack(),
 			"opentoolchain_pipeline_properties":    dataSourceOpenToolchainPipelineProperties(),
 			"opentoolchain_pipeline_triggers":      dataSourceOpenToolchainPipelineTriggers(),

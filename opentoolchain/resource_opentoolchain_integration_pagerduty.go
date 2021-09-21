@@ -61,14 +61,12 @@ func resourceOpenToolchainIntegrationPagerDuty() *schema.Resource {
 				Description:   "Name of PagerDuty service URL",
 				Type:          schema.TypeString,
 				Optional:      true,
-				ForceNew:      true,
 				ConflictsWith: []string{"service_name", "primary_email", "primary_phone_number"},
 			},
 			"service_name": {
 				Description:   "Name of PagerDuty service to post alerts to",
 				Type:          schema.TypeString,
 				Optional:      true,
-				ForceNew:      true,
 				ConflictsWith: []string{"service_url"},
 			},
 			"primary_email": {
@@ -336,7 +334,7 @@ func resourceOpenToolchainIntegrationPagerDutyUpdate(ctx context.Context, d *sch
 		options.Parameters.UserPhone = &primaryPhoneNumber
 	}
 
-	if d.HasChange("primary_email") || d.HasChange("primary_phone_number") || d.HasChange("api_key") {
+	if d.HasChange("primary_email") || d.HasChange("primary_phone_number") || d.HasChange("api_key") || d.HasChange("service_name") || d.HasChange("service_url") {
 		_, err := c.PatchServiceInstanceWithContext(ctx, options)
 
 		if err != nil {
