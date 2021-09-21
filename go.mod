@@ -12,7 +12,7 @@ require (
 	github.com/apparentlymart/go-cidr v1.1.0 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
 	github.com/aws/aws-sdk-go v1.37.0 // indirect
-	github.com/dariusbakunas/opentoolchain-go-sdk v0.4.0
+	github.com/dariusbakunas/opentoolchain-go-sdk v0.5.0
 	github.com/fatih/color v1.12.0 // indirect
 	github.com/go-openapi/errors v0.20.1 // indirect
 	github.com/go-openapi/strfmt v0.20.2 // indirect
@@ -40,12 +40,12 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/zclconf/go-cty v1.9.1 // indirect
 	go.mongodb.org/mongo-driver v1.7.2 // indirect
-	golang.org/x/net v0.0.0-20210917163549-3c21e5b27794 // indirect
-	golang.org/x/sys v0.0.0-20210917161153-d61c044b1678 // indirect
+	golang.org/x/net v0.0.0-20210917221730-978cfadd31cf // indirect
+	golang.org/x/sys v0.0.0-20210921065528-437939a70204 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/api v0.34.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20210917145530-b395a37504d4 // indirect
+	google.golang.org/genproto v0.0.0-20210920155426-26f343e4c215 // indirect
 )
 
 require (
@@ -77,7 +77,7 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jstemmer/go-junit-report v0.9.1 // indirect
 	github.com/klauspost/compress v1.11.2 // indirect
-	github.com/mattn/go-colorable v0.1.8 // indirect
+	github.com/mattn/go-colorable v0.1.9 // indirect
 	github.com/mitchellh/cli v1.1.2 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
