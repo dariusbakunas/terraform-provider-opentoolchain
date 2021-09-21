@@ -63,6 +63,7 @@ func Provider() *schema.Provider {
 			// },
 		},
 		ResourcesMap: map[string]*schema.Resource{
+			"opentoolchain_integration_github":        resourceOpenToolchainIntegrationGithub(),
 			"opentoolchain_integration_ibm_github":    resourceOpenToolchainIntegrationIBMGithub(),
 			"opentoolchain_integration_keyprotect":    resourceOpenToolchainIntegrationKeyProtect(),
 			"opentoolchain_integration_pagerduty":     resourceOpenToolchainIntegrationPagerDuty(),
@@ -75,6 +76,7 @@ func Provider() *schema.Provider {
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"opentoolchain_toolchain":              dataSourceOpenToolchainToolchain(),
+			"opentoolchain_integration_github":     dataSourceOpenToolchainIntegrationGithub(),
 			"opentoolchain_integration_ibm_github": dataSourceOpenToolchainIntegrationIBMGithub(),
 			"opentoolchain_integration_keyprotect": dataSourceOpenToolchainIntegrationKeyProtect(),
 			"opentoolchain_integration_pagerduty":  dataSourceOpenToolchainIntegrationPagerDuty(),

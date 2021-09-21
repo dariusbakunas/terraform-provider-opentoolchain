@@ -11,17 +11,18 @@ import (
 	"strings"
 )
 
+//
 const (
-	ibmGithubIntegrationServiceType = "github_integrated"
+	githubIntegrationServiceType = "githubconsolidated"
 )
 
-func resourceOpenToolchainIntegrationIBMGithub() *schema.Resource {
+func resourceOpenToolchainIntegrationGithub() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Manage IBM Github integration (WARN: using undocumented APIs)",
-		CreateContext: resourceOpenToolchainIntegrationIBMGithubCreate,
-		ReadContext:   resourceOpenToolchainIntegrationIBMGithubRead,
-		DeleteContext: resourceOpenToolchainIntegrationIBMGithubDelete,
-		UpdateContext: resourceOpenToolchainIntegrationIBMGithubUpdate,
+		Description:   "Manage Github integration (WARN: using undocumented APIs)",
+		CreateContext: resourceOpenToolchainIntegrationGithubCreate,
+		ReadContext:   resourceOpenToolchainIntegrationGithubRead,
+		DeleteContext: resourceOpenToolchainIntegrationGithubDelete,
+		UpdateContext: resourceOpenToolchainIntegrationGithubUpdate,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -80,7 +81,7 @@ func resourceOpenToolchainIntegrationIBMGithub() *schema.Resource {
 	}
 }
 
-func resourceOpenToolchainIntegrationIBMGithubCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceOpenToolchainIntegrationGithubCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	envID := d.Get("env_id").(string)
 	toolchainID := d.Get("toolchain_id").(string)
 	repoURL := d.Get("repo_url").(string)
@@ -97,11 +98,11 @@ func resourceOpenToolchainIntegrationIBMGithubCreate(ctx context.Context, d *sch
 	options := &oc.CreateServiceInstanceOptions{
 		ToolchainID: &toolchainID,
 		EnvID:       &envID,
-		ServiceID:   getStringPtr(ibmGithubIntegrationServiceType),
+		ServiceID:   getStringPtr(githubIntegrationServiceType),
 		Parameters: &oc.CreateServiceInstanceParamsParameters{
-			Authorized:         getStringPtr("integrated"),
-			GitID:              getStringPtr("integrated"),
-			Legal:              getBoolPtr(true),
+			Authorized:         getStringPtr("github"),
+			GitID:              getStringPtr("github"),
+			Legal:              getBoolPtr(false),
 			RepoURL:            &uuidURL,
 			Type:               getStringPtr("link"),
 			PrivateRepo:        &private,
@@ -130,7 +131,7 @@ func resourceOpenToolchainIntegrationIBMGithubCreate(ctx context.Context, d *sch
 	// find new service instance
 	if toolchain.Services != nil {
 		for _, v := range toolchain.Services {
-			if v.ServiceID != nil && *v.ServiceID == ibmGithubIntegrationServiceType && v.Parameters != nil && v.Parameters["repo_url"] == uuidURL && v.InstanceID != nil {
+			if v.ServiceID != nil && *v.ServiceID == githubIntegrationServiceType && v.Parameters != nil && v.Parameters["repo_url"] == uuidURL && v.InstanceID != nil {
 				instanceID = *v.InstanceID
 				break
 			}
@@ -146,7 +147,7 @@ func resourceOpenToolchainIntegrationIBMGithubCreate(ctx context.Context, d *sch
 		ToolchainID: &toolchainID,
 		GUID:        &instanceID,
 		EnvID:       &envID,
-		ServiceID:   getStringPtr(ibmGithubIntegrationServiceType),
+		ServiceID:   getStringPtr(githubIntegrationServiceType),
 		Parameters: &oc.PatchServiceInstanceParamsParameters{
 			RepoURL: &repoURL,
 		},
@@ -159,12 +160,16 @@ func resourceOpenToolchainIntegrationIBMGithubCreate(ctx context.Context, d *sch
 	d.Set("integration_id", instanceID)
 	d.SetId(fmt.Sprintf("%s/%s/%s", instanceID, toolchainID, envID))
 
-	return resourceOpenToolchainIntegrationIBMGithubRead(ctx, d, m)
+	return resourceOpenToolchainIntegrationGithubRead(ctx, d, m)
 }
 
-func resourceOpenToolchainIntegrationIBMGithubRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceOpenToolchainIntegrationGithubRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	id := d.Id()
 	idParts := strings.Split(id, "/")
+
+	if len(idParts) < 3 {
+		return diag.Errorf("Incorrect ID %s: ID should be a combination of integrationID/toolchainID/envID", d.Id())
+	}
 
 	integrationID := idParts[0]
 	toolchainID := idParts[1]
@@ -220,9 +225,7 @@ func resourceOpenToolchainIntegrationIBMGithubRead(ctx context.Context, d *schem
 	return nil
 }
 
-func resourceOpenToolchainIntegrationIBMGithubDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-
+func resourceOpenToolchainIntegrationGithubDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	integrationID := d.Get("integration_id").(string)
 	envID := d.Get("env_id").(string)
 	toolchainID := d.Get("toolchain_id").(string)
@@ -241,10 +244,10 @@ func resourceOpenToolchainIntegrationIBMGithubDelete(ctx context.Context, d *sch
 	}
 
 	d.SetId("")
-	return diags
+	return nil
 }
 
-func resourceOpenToolchainIntegrationIBMGithubUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceOpenToolchainIntegrationGithubUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	instanceID := d.Get("integration_id").(string)
 	envID := d.Get("env_id").(string)
 	toolchainID := d.Get("toolchain_id").(string)
@@ -261,7 +264,7 @@ func resourceOpenToolchainIntegrationIBMGithubUpdate(ctx context.Context, d *sch
 			ToolchainID: &toolchainID,
 			GUID:        &instanceID,
 			EnvID:       &envID,
-			ServiceID:   getStringPtr(ibmGithubIntegrationServiceType),
+			ServiceID:   getStringPtr(githubIntegrationServiceType),
 			Parameters: &oc.PatchServiceInstanceParamsParameters{
 				PrivateRepo:        &private,
 				HasIssues:          &enableIssues,
@@ -274,5 +277,5 @@ func resourceOpenToolchainIntegrationIBMGithubUpdate(ctx context.Context, d *sch
 		}
 	}
 
-	return resourceOpenToolchainIntegrationIBMGithubRead(ctx, d, m)
+	return resourceOpenToolchainIntegrationGithubRead(ctx, d, m)
 }

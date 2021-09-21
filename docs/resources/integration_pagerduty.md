@@ -46,4 +46,10 @@ resource "opentoolchain_integration_pagerduty" "pd" {
 - **integration_id** (String) The integration `guid`
 - **service_id** (String) Name of PagerDuty service ID
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+terraform import opentoolchain_integration_pagerduty.pd <integration_id>/<toolchain_id>/<env_id>
+```
