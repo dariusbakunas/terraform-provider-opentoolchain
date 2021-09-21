@@ -1,4 +1,51 @@
 
+<a name="v0.13.0"></a>
+## [v0.13.0](https://github.com/dariusbakunas/terraform-provider-opentoolchain/compare/v0.12.0...v0.13.0)
+
+> 2021-09-21
+
+### Feat
+
+* add pagerduty datasource
+* add initial pagerduty integration resource
+
+### Pull Requests
+
+* Merge pull request [#5](https://github.com/dariusbakunas/terraform-provider-opentoolchain/issues/5) from dariusbakunas/more-integrations
+* Merge pull request [#4](https://github.com/dariusbakunas/terraform-provider-opentoolchain/issues/4) from dariusbakunas/tekton-pipeline-resource
+
+
+<a name="v0.12.0"></a>
+## [v0.12.0](https://github.com/dariusbakunas/terraform-provider-opentoolchain/compare/v0.11.2...v0.12.0)
+
+> 2021-09-17
+
+### Feat
+
+* add import support for tekton pipeline
+* add import support for slack integration
+* add import support for keyprotect
+* add github integration import support
+* add tekton pipeline datasource
+* add slack integration datasource
+* add keyprotect integration data source
+* add github integration datasource
+* add slack integration resource
+* add secret_env property to the tekton pipeline resource
+* add text_env property to tekton pipline resource
+* add keyprotect integration
+* tekton pipeline triggers resource
+* add tekton pipeline definition resource
+* add pipeline definition schema
+* enable github integration resource
+* initial github integration resource
+* initial tekton pipeline resource
+
+### Fix
+
+* update opentoolchain-sdk version
+
+
 <a name="v0.11.2"></a>
 ## [v0.11.2](https://github.com/dariusbakunas/terraform-provider-opentoolchain/compare/v0.11.1...v0.11.2)
 
@@ -20,10 +67,6 @@
 
 * add ability to override trigger branch/pattern
 
-### Refactor
-
-* additional error checks
-
 ### Pull Requests
 
 * Merge pull request [#3](https://github.com/dariusbakunas/terraform-provider-opentoolchain/issues/3) from dariusbakunas/trigger-branch
@@ -33,12 +76,6 @@
 ## [v0.10.1](https://github.com/dariusbakunas/terraform-provider-opentoolchain/compare/v0.10.0...v0.10.1)
 
 > 2021-08-06
-
-### Refactor
-
-* simplify updateOriginalProps and update tests
-* move getKeyDiff to helpers
-* extract some logic from `createOriginalProps`
 
 
 <a name="v0.10.0"></a>
@@ -126,11 +163,6 @@
 ### Fix
 
 * switch to newest client
-
-### Refactor
-
-* minor fixes
-* since this is a set, it probably makes more sense to use singular
 
 ### Pull Requests
 
@@ -288,10 +320,6 @@
 * add computed services property to toolchain resource
 * initial tekton pipeline datasource
 
-### Refactor
-
-* rename pipeline resources
-
 
 <a name="v0.5.0"></a>
 ## [v0.5.0](https://github.com/dariusbakunas/terraform-provider-opentoolchain/compare/v0.4.0...v0.5.0)
@@ -319,11 +347,6 @@
 
 > 2021-05-27
 
-### Refactor
-
-* avoid duplicate props and add more error details
-* more descriptive error message
-
 ### Reverts
 
 * chore: lock goreleaser version
@@ -342,10 +365,6 @@
 ### Fix
 
 * switch to correct opentoolchain-go-sdk version
-
-### Refactor
-
-* cleanup dbg statement
 
 
 <a name="v0.2.1"></a>

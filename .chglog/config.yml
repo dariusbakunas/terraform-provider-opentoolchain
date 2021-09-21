@@ -10,7 +10,7 @@ options:
         - feat
         - fix
         - perf
-        - refactor
+#        - refactor
   commit_groups:
     # title_maps:
     #   feat: Features
