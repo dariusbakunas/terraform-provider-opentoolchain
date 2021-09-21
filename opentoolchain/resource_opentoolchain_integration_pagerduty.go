@@ -22,6 +22,9 @@ func resourceOpenToolchainIntegrationPagerDuty() *schema.Resource {
 		ReadContext:   resourceOpenToolchainIntegrationPagerDutyRead,
 		DeleteContext: resourceOpenToolchainIntegrationPagerDutyDelete,
 		UpdateContext: resourceOpenToolchainIntegrationPagerDutyUpdate,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"toolchain_id": {
 				Description: "The toolchain `guid`",
