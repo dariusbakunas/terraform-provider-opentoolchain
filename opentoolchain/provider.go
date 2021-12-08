@@ -37,12 +37,6 @@ func Provider() *schema.Provider {
 				Sensitive:   true,
 				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"IC_IAM_TOKEN", "IBMCLOUD_IAM_TOKEN", "IAM_ACCESS_TOKEN"}, nil),
 			},
-			"base_url": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Open Toolchain API base URL (for example 'https://cloud.ibm.com')",
-				Default:     "https://cloud.ibm.com",
-			},
 			"tags_base_url": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -103,7 +97,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	}
 
 	otClientOptions := &oc.OpenToolchainV1Options{
-		URL: d.Get("base_url").(string),
+		URL: "https://", // SDK appends 'devops-api.{region}.devops.cloud.ibm.com/v1/toolchains/{guid}' to all requests, due to openapi generator limitation, unable to override
 	}
 
 	tagClientOptions := &globaltaggingv1.GlobalTaggingV1Options{
