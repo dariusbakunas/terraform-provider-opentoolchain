@@ -198,6 +198,9 @@ func resourceOpenToolchainTektonPipelineCreate(ctx context.Context, d *schema.Re
 	inputs := d.Get("definition").(*schema.Set)
 	triggers := d.Get("trigger").(*schema.Set)
 
+	envIDParts := strings.Split(envID, ":")
+	region := envIDParts[len(envIDParts)-1]
+
 	config := m.(*ProviderConfig)
 	c := config.OTClient
 
@@ -224,14 +227,21 @@ func resourceOpenToolchainTektonPipelineCreate(ctx context.Context, d *schema.Re
 
 	// we have to get toolchain first, to be able to find pipeline ID
 	// original POST API call does not provide it
-	toolchain, _, err := c.GetToolchainWithContext(ctx, &oc.GetToolchainOptions{
-		GUID:  &toolchainID,
-		EnvID: &envID,
+	response, _, err := c.GetToolchainWithContext(ctx, &oc.GetToolchainOptions{
+		GUID:    &toolchainID,
+		Region:  &region,
+		Include: getStringPtr("fields,services"),
 	})
 
 	if err != nil {
 		return diag.Errorf("Error reading toolchain: %s", err)
 	}
+
+	if len(response.Items) == 0 {
+		return diag.Errorf("No toolchain found with GUID: %s", toolchainID)
+	}
+
+	toolchain := response.Items[0]
 
 	var instanceID string
 

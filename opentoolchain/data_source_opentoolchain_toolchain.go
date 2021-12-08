@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/url"
 	"path"
+	"strings"
 
 	"github.com/IBM/platform-services-go-sdk/globaltaggingv1"
 	oc "github.com/dariusbakunas/opentoolchain-go-sdk/opentoolchainv1"
@@ -135,25 +136,31 @@ func dataSourceOpenToolchainToolchain() *schema.Resource {
 }
 
 func dataSourceOpenToolchainToolchainRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-
 	guid := d.Get("guid").(string)
 	envID := d.Get("env_id").(string)
+
+	envIDParts := strings.Split(envID, ":")
+	region := envIDParts[len(envIDParts)-1]
 
 	config := m.(*ProviderConfig)
 	c := config.OTClient
 	t := config.TagClient
 
-	toolchain, _, err := c.GetToolchainWithContext(ctx, &oc.GetToolchainOptions{
-		GUID:  &guid,
-		EnvID: &envID,
+	response, _, err := c.GetToolchainWithContext(ctx, &oc.GetToolchainOptions{
+		GUID:    &guid,
+		Region:  &region,
+		Include: getStringPtr("fields,services"),
 	})
 
 	if err != nil {
 		return diag.Errorf("Error reading toolchain: %s", err)
 	}
 
-	log.Printf("[DEBUG] Read toolchain: %+v", toolchain)
+	if len(response.Items) == 0 {
+		return diag.Errorf("No toolchain found with GUID: %s", guid)
+	}
+
+	toolchain := response.Items[0]
 
 	d.Set("name", *toolchain.Name)
 	d.Set("description", *toolchain.Description)
@@ -184,9 +191,8 @@ func dataSourceOpenToolchainToolchainRead(ctx context.Context, d *schema.Resourc
 
 	d.Set("services", flattenToolchainServices(toolchain.Services))
 	d.Set("tags", tags)
-	// d.Set("lifecycle_messaging_webhook_id", *toolchain.LifecycleMessagingWebhookID)
 
-	u, err := url.Parse(c.GetServiceURL())
+	u, err := url.Parse("https://cloud.ibm.com")
 
 	if err != nil {
 		return diag.Errorf("Unable to parse base service url: %s", err)
@@ -196,7 +202,10 @@ func dataSourceOpenToolchainToolchainRead(ctx context.Context, d *schema.Resourc
 
 	d.Set("url", fmt.Sprintf("%s?env_id=%s", u.String(), envID))
 	d.SetId(*toolchain.ToolchainGUID)
-	return diags
+
+	// d.Set("lifecycle_messaging_webhook_id", *toolchain.LifecycleMessagingWebhookID)
+
+	return nil
 }
 
 func flattenToolchainTemplate(tpl *oc.ToolchainTemplate) []interface{} {

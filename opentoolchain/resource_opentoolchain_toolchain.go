@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"path"
 	"regexp"
+	"strings"
 
 	"github.com/IBM/platform-services-go-sdk/globaltaggingv1"
 	oc "github.com/dariusbakunas/opentoolchain-go-sdk/opentoolchainv1"
@@ -137,17 +138,27 @@ func resourceOpenToolchainToolchainRead(ctx context.Context, d *schema.ResourceD
 	guid := d.Id()
 	envID := d.Get("env_id").(string)
 
+	envIDParts := strings.Split(envID, ":")
+	region := envIDParts[len(envIDParts)-1]
+
 	config := m.(*ProviderConfig)
 	c := config.OTClient
 
-	toolchain, _, err := c.GetToolchainWithContext(ctx, &oc.GetToolchainOptions{
-		GUID:  getStringPtr(guid),
-		EnvID: getStringPtr(envID),
+	response, _, err := c.GetToolchainWithContext(ctx, &oc.GetToolchainOptions{
+		GUID:    getStringPtr(guid),
+		Region:  &region,
+		Include: getStringPtr("fields,services"),
 	})
 
 	if err != nil {
 		return diag.Errorf("Error reading toolchain: %s", err)
 	}
+
+	if len(response.Items) == 0 {
+		return diag.Errorf("No toolchain found with GUID: %s", guid)
+	}
+
+	toolchain := response.Items[0]
 
 	log.Printf("[DEBUG] Read toolchain: %+v", toolchain)
 
@@ -159,7 +170,7 @@ func resourceOpenToolchainToolchainRead(ctx context.Context, d *schema.ResourceD
 	//d.Set("template", flattenToolchainTemplate(toolchain.Template))
 	// d.Set("lifecycle_messaging_webhook_id", *toolchain.LifecycleMessagingWebhookID)
 
-	u, err := url.Parse(c.GetServiceURL())
+	u, err := url.Parse("https://cloud.ibm.com")
 
 	if err != nil {
 		return diag.Errorf("Unable to parse base service url: %s", err)
@@ -303,14 +314,24 @@ func getCRN(ctx context.Context, d *schema.ResourceData, m interface{}) (string,
 	config := m.(*ProviderConfig)
 	c := config.OTClient
 
-	toolchain, _, err := c.GetToolchainWithContext(ctx, &oc.GetToolchainOptions{
-		GUID:  getStringPtr(guid),
-		EnvID: getStringPtr(envID),
+	envIDParts := strings.Split(envID, ":")
+	region := envIDParts[len(envIDParts)-1]
+
+	response, _, err := c.GetToolchainWithContext(ctx, &oc.GetToolchainOptions{
+		GUID:    getStringPtr(guid),
+		Region:  &region,
+		Include: getStringPtr("fields"),
 	})
 
 	if err != nil {
 		return "", err
 	}
+
+	if len(response.Items) == 0 {
+		return "", fmt.Errorf("no toolchain found with GUID: %s", guid)
+	}
+
+	toolchain := response.Items[0]
 
 	log.Printf("[DEBUG] Read toolchain: %+v", toolchain)
 	return *toolchain.CRN, nil
