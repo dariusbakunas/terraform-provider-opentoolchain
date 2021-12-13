@@ -185,6 +185,9 @@ func resourceOpenToolchainToolchainRead(ctx context.Context, d *schema.ResourceD
 func resourceOpenToolchainToolchainCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	envID := d.Get("env_id").(string)
 
+	envIDParts := strings.Split(envID, ":")
+	region := envIDParts[len(envIDParts)-1]
+
 	input := &oc.CreateToolchainOptions{
 		EnvID:           getStringPtr(envID),
 		Autocreate:      getBoolPtr(true),
@@ -260,9 +263,9 @@ func resourceOpenToolchainToolchainCreate(ctx context.Context, d *schema.Resourc
 	if name, ok := d.GetOk("name"); ok {
 		// name was specified, try to use patch method to update it
 		_, err := c.PatchToolchainWithContext(ctx, &oc.PatchToolchainOptions{
-			EnvID: &envID,
-			GUID:  &guid,
-			Name:  getStringPtr(name.(string)),
+			Region: &region,
+			GUID:   &guid,
+			Name:   getStringPtr(name.(string)),
 		})
 
 		if err != nil {
@@ -270,8 +273,8 @@ func resourceOpenToolchainToolchainCreate(ctx context.Context, d *schema.Resourc
 
 			// try to cleanup
 			_, deleteErr := c.DeleteToolchainWithContext(ctx, &oc.DeleteToolchainOptions{
-				EnvID: getStringPtr(envID),
-				GUID:  getStringPtr(guid),
+				Region: &region,
+				GUID:   &guid,
 			})
 
 			if deleteErr != nil {
@@ -357,11 +360,14 @@ func resourceOpenToolchainToolchainDelete(ctx context.Context, d *schema.Resourc
 	config := m.(*ProviderConfig)
 	c := config.OTClient
 
+	envIDParts := strings.Split(envID, ":")
+	region := envIDParts[len(envIDParts)-1]
+
 	log.Printf("[DEBUG] Deleting toolchain: %s", d.Id())
 
 	_, err := c.DeleteToolchainWithContext(ctx, &oc.DeleteToolchainOptions{
-		EnvID: getStringPtr(envID),
-		GUID:  getStringPtr(guid),
+		Region: &region,
+		GUID:   &guid,
 	})
 
 	if err != nil {
@@ -376,6 +382,9 @@ func resourceOpenToolchainToolchainUpdate(ctx context.Context, d *schema.Resourc
 	guid := d.Get("guid").(string)
 	crn := d.Get("crn").(string)
 
+	envIDParts := strings.Split(envID, ":")
+	region := envIDParts[len(envIDParts)-1]
+
 	config := m.(*ProviderConfig)
 	c := config.OTClient
 	t := config.TagClient
@@ -384,9 +393,9 @@ func resourceOpenToolchainToolchainUpdate(ctx context.Context, d *schema.Resourc
 		name := d.Get("name")
 
 		_, err := c.PatchToolchainWithContext(ctx, &oc.PatchToolchainOptions{
-			EnvID: &envID,
-			GUID:  &guid,
-			Name:  getStringPtr(name.(string)),
+			Region: &region,
+			GUID:   &guid,
+			Name:   getStringPtr(name.(string)),
 		})
 
 		if err != nil {
