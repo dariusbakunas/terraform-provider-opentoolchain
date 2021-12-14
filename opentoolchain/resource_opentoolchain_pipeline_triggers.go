@@ -77,12 +77,15 @@ func resourceOpenToolchainPipelineTriggersRead(ctx context.Context, d *schema.Re
 	guid := idParts[0]
 	envID := idParts[1]
 
+	envIDParts := strings.Split(envID, ":")
+	region := envIDParts[len(envIDParts)-1]
+
 	config := m.(*ProviderConfig)
 	c := config.OTClient
 
 	pipeline, _, err := c.GetTektonPipelineWithContext(ctx, &oc.GetTektonPipelineOptions{
-		GUID:  &guid,
-		EnvID: &envID,
+		GUID:   &guid,
+		Region: &region,
 	})
 
 	if err != nil {
@@ -132,10 +135,13 @@ func resourceOpenToolchainPipelineTriggersCreate(ctx context.Context, d *schema.
 	config := m.(*ProviderConfig)
 	c := config.OTClient
 
+	envIDParts := strings.Split(envID, ":")
+	region := envIDParts[len(envIDParts)-1]
+
 	// we have to read existing triggers first
 	pipeline, _, err := c.GetTektonPipelineWithContext(ctx, &oc.GetTektonPipelineOptions{
-		GUID:  &guid,
-		EnvID: &envID,
+		GUID:   &guid,
+		Region: &region,
 	})
 
 	if err != nil {
@@ -166,13 +172,16 @@ func resourceOpenToolchainPipelineTriggersUpdate(ctx context.Context, d *schema.
 		guid := d.Get("guid").(string)
 		envID := d.Get("env_id").(string)
 
+		envIDParts := strings.Split(envID, ":")
+		region := envIDParts[len(envIDParts)-1]
+
 		config := m.(*ProviderConfig)
 		c := config.OTClient
 
 		// we have to read existing envProperties first
 		pipeline, _, err := c.GetTektonPipelineWithContext(ctx, &oc.GetTektonPipelineOptions{
-			GUID:  &guid,
-			EnvID: &envID,
+			GUID:   &guid,
+			Region: &region,
 		})
 
 		if err != nil {

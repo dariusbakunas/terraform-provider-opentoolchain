@@ -346,6 +346,9 @@ func resourceOpenToolchainTektonPipelineRead(ctx context.Context, d *schema.Reso
 	pipelineID := idParts[0]
 	envID := idParts[1]
 
+	envIDParts := strings.Split(envID, ":")
+	region := envIDParts[len(envIDParts)-1]
+
 	d.Set("pipeline_id", pipelineID)
 	d.Set("env_id", envID)
 
@@ -353,8 +356,8 @@ func resourceOpenToolchainTektonPipelineRead(ctx context.Context, d *schema.Reso
 	c := config.OTClient
 
 	pipeline, _, err := c.GetTektonPipelineWithContext(ctx, &oc.GetTektonPipelineOptions{
-		GUID:  &pipelineID,
-		EnvID: &envID,
+		GUID:   &pipelineID,
+		Region: &region,
 	})
 
 	if err != nil {

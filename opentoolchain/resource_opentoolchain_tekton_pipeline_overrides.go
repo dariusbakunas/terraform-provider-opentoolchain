@@ -166,12 +166,15 @@ func resourceOpenToolchainTektonPipelineOverridesRead(ctx context.Context, d *sc
 	guid := idParts[0]
 	envID := idParts[1]
 
+	envIDParts := strings.Split(envID, ":")
+	region := envIDParts[len(envIDParts)-1]
+
 	config := m.(*ProviderConfig)
 	c := config.OTClient
 
 	pipeline, _, err := c.GetTektonPipelineWithContext(ctx, &oc.GetTektonPipelineOptions{
-		GUID:  &guid,
-		EnvID: &envID,
+		GUID:   &guid,
+		Region: &region,
 	})
 
 	if err != nil {
@@ -282,10 +285,13 @@ func resourceOpenToolchainTektonPipelineOverridesCreate(ctx context.Context, d *
 		EnvID: &envID,
 	}
 
+	envIDParts := strings.Split(envID, ":")
+	region := envIDParts[len(envIDParts)-1]
+
 	// we have to read existing envProperties first
 	pipeline, _, err := c.GetTektonPipelineWithContext(ctx, &oc.GetTektonPipelineOptions{
-		GUID:  &guid,
-		EnvID: &envID,
+		GUID:   &guid,
+		Region: &region,
 	})
 
 	if err != nil {
@@ -358,13 +364,16 @@ func resourceOpenToolchainTektonPipelineOverridesDelete(ctx context.Context, d *
 		EnvID: &envID,
 	}
 
+	envIDParts := strings.Split(envID, ":")
+	region := envIDParts[len(envIDParts)-1]
+
 	originalProps := d.Get("original_properties")
 
 	if originalProps != nil {
 		// we have to read existing envProperties first
 		pipeline, _, err := c.GetTektonPipelineWithContext(ctx, &oc.GetTektonPipelineOptions{
-			GUID:  &guid,
-			EnvID: &envID,
+			GUID:   &guid,
+			Region: &region,
 		})
 
 		if err != nil {
@@ -431,10 +440,13 @@ func resourceOpenToolchainTektonPipelineOverridesUpdate(ctx context.Context, d *
 		config := m.(*ProviderConfig)
 		c := config.OTClient
 
+		envIDParts := strings.Split(envID, ":")
+		region := envIDParts[len(envIDParts)-1]
+
 		// we have to read existing envProperties first
 		pipeline, _, err := c.GetTektonPipelineWithContext(ctx, &oc.GetTektonPipelineOptions{
-			GUID:  &guid,
-			EnvID: &envID,
+			GUID:   &guid,
+			Region: &region,
 		})
 
 		if err != nil {
