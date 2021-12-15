@@ -6,6 +6,7 @@ import (
 	oc "github.com/dariusbakunas/opentoolchain-go-sdk/opentoolchainv1"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"strings"
 )
 
 func dataSourceOpenToolchainTektonPipeline() *schema.Resource {
@@ -150,12 +151,15 @@ func dataSourceOpenToolchainTektonPipelineRead(ctx context.Context, d *schema.Re
 	envID := d.Get("env_id").(string)
 	pipelineID := d.Get("pipeline_id").(string)
 
+	envIDParts := strings.Split(envID, ":")
+	region := envIDParts[len(envIDParts)-1]
+
 	config := m.(*ProviderConfig)
 	c := config.OTClient
 
 	pipeline, _, err := c.GetTektonPipelineWithContext(ctx, &oc.GetTektonPipelineOptions{
-		GUID:  &pipelineID,
-		EnvID: &envID,
+		GUID:   &pipelineID,
+		Region: &region,
 	})
 
 	if err != nil {

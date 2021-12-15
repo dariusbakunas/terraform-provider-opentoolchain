@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"path"
 	"regexp"
+	"strings"
 
 	"github.com/IBM/platform-services-go-sdk/globaltaggingv1"
 	oc "github.com/dariusbakunas/opentoolchain-go-sdk/opentoolchainv1"
@@ -137,17 +138,27 @@ func resourceOpenToolchainToolchainRead(ctx context.Context, d *schema.ResourceD
 	guid := d.Id()
 	envID := d.Get("env_id").(string)
 
+	envIDParts := strings.Split(envID, ":")
+	region := envIDParts[len(envIDParts)-1]
+
 	config := m.(*ProviderConfig)
 	c := config.OTClient
 
-	toolchain, _, err := c.GetToolchainWithContext(ctx, &oc.GetToolchainOptions{
-		GUID:  getStringPtr(guid),
-		EnvID: getStringPtr(envID),
+	response, _, err := c.GetToolchainWithContext(ctx, &oc.GetToolchainOptions{
+		GUID:    getStringPtr(guid),
+		Region:  &region,
+		Include: getStringPtr("fields,services"),
 	})
 
 	if err != nil {
 		return diag.Errorf("Error reading toolchain: %s", err)
 	}
+
+	if len(response.Items) == 0 {
+		return diag.Errorf("No toolchain found with GUID: %s", guid)
+	}
+
+	toolchain := response.Items[0]
 
 	log.Printf("[DEBUG] Read toolchain: %+v", toolchain)
 
@@ -159,7 +170,7 @@ func resourceOpenToolchainToolchainRead(ctx context.Context, d *schema.ResourceD
 	//d.Set("template", flattenToolchainTemplate(toolchain.Template))
 	// d.Set("lifecycle_messaging_webhook_id", *toolchain.LifecycleMessagingWebhookID)
 
-	u, err := url.Parse(c.GetServiceURL())
+	u, err := url.Parse("https://cloud.ibm.com")
 
 	if err != nil {
 		return diag.Errorf("Unable to parse base service url: %s", err)
@@ -173,6 +184,9 @@ func resourceOpenToolchainToolchainRead(ctx context.Context, d *schema.ResourceD
 
 func resourceOpenToolchainToolchainCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	envID := d.Get("env_id").(string)
+
+	envIDParts := strings.Split(envID, ":")
+	region := envIDParts[len(envIDParts)-1]
 
 	input := &oc.CreateToolchainOptions{
 		EnvID:           getStringPtr(envID),
@@ -249,9 +263,9 @@ func resourceOpenToolchainToolchainCreate(ctx context.Context, d *schema.Resourc
 	if name, ok := d.GetOk("name"); ok {
 		// name was specified, try to use patch method to update it
 		_, err := c.PatchToolchainWithContext(ctx, &oc.PatchToolchainOptions{
-			EnvID: &envID,
-			GUID:  &guid,
-			Name:  getStringPtr(name.(string)),
+			Region: &region,
+			GUID:   &guid,
+			Name:   getStringPtr(name.(string)),
 		})
 
 		if err != nil {
@@ -259,8 +273,8 @@ func resourceOpenToolchainToolchainCreate(ctx context.Context, d *schema.Resourc
 
 			// try to cleanup
 			_, deleteErr := c.DeleteToolchainWithContext(ctx, &oc.DeleteToolchainOptions{
-				EnvID: getStringPtr(envID),
-				GUID:  getStringPtr(guid),
+				Region: &region,
+				GUID:   &guid,
 			})
 
 			if deleteErr != nil {
@@ -303,14 +317,24 @@ func getCRN(ctx context.Context, d *schema.ResourceData, m interface{}) (string,
 	config := m.(*ProviderConfig)
 	c := config.OTClient
 
-	toolchain, _, err := c.GetToolchainWithContext(ctx, &oc.GetToolchainOptions{
-		GUID:  getStringPtr(guid),
-		EnvID: getStringPtr(envID),
+	envIDParts := strings.Split(envID, ":")
+	region := envIDParts[len(envIDParts)-1]
+
+	response, _, err := c.GetToolchainWithContext(ctx, &oc.GetToolchainOptions{
+		GUID:    getStringPtr(guid),
+		Region:  &region,
+		Include: getStringPtr("fields"),
 	})
 
 	if err != nil {
 		return "", err
 	}
+
+	if len(response.Items) == 0 {
+		return "", fmt.Errorf("no toolchain found with GUID: %s", guid)
+	}
+
+	toolchain := response.Items[0]
 
 	log.Printf("[DEBUG] Read toolchain: %+v", toolchain)
 	return *toolchain.CRN, nil
@@ -336,11 +360,15 @@ func resourceOpenToolchainToolchainDelete(ctx context.Context, d *schema.Resourc
 	config := m.(*ProviderConfig)
 	c := config.OTClient
 
+	envIDParts := strings.Split(envID, ":")
+	region := envIDParts[len(envIDParts)-1]
+
 	log.Printf("[DEBUG] Deleting toolchain: %s", d.Id())
 
 	_, err := c.DeleteToolchainWithContext(ctx, &oc.DeleteToolchainOptions{
-		EnvID: getStringPtr(envID),
-		GUID:  getStringPtr(guid),
+		Region:                 &region,
+		GUID:                   &guid,
+		UnbindDeprovisionTools: getBoolPtr(true),
 	})
 
 	if err != nil {
@@ -355,6 +383,9 @@ func resourceOpenToolchainToolchainUpdate(ctx context.Context, d *schema.Resourc
 	guid := d.Get("guid").(string)
 	crn := d.Get("crn").(string)
 
+	envIDParts := strings.Split(envID, ":")
+	region := envIDParts[len(envIDParts)-1]
+
 	config := m.(*ProviderConfig)
 	c := config.OTClient
 	t := config.TagClient
@@ -363,9 +394,9 @@ func resourceOpenToolchainToolchainUpdate(ctx context.Context, d *schema.Resourc
 		name := d.Get("name")
 
 		_, err := c.PatchToolchainWithContext(ctx, &oc.PatchToolchainOptions{
-			EnvID: &envID,
-			GUID:  &guid,
-			Name:  getStringPtr(name.(string)),
+			Region: &region,
+			GUID:   &guid,
+			Name:   getStringPtr(name.(string)),
 		})
 
 		if err != nil {

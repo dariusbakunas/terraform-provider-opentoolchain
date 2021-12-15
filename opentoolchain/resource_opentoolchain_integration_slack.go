@@ -117,6 +117,9 @@ func resourceOpenToolchainIntegrationSlackCreate(ctx context.Context, d *schema.
 	webhookURL := d.Get("webhook_url").(string)
 	evt, evtOK := d.GetOk("events")
 
+	envIDParts := strings.Split(envID, ":")
+	region := envIDParts[len(envIDParts)-1]
+
 	events := map[string]bool{
 		"pipeline_start":   true,
 		"pipeline_success": true,
@@ -165,14 +168,21 @@ func resourceOpenToolchainIntegrationSlackCreate(ctx context.Context, d *schema.
 		return diag.Errorf("Error creating Slack integration: %s", err)
 	}
 
-	toolchain, _, err := c.GetToolchainWithContext(ctx, &oc.GetToolchainOptions{
-		GUID:  &toolchainID,
-		EnvID: &envID,
+	response, _, err := c.GetToolchainWithContext(ctx, &oc.GetToolchainOptions{
+		GUID:    &toolchainID,
+		Region:  &region,
+		Include: getStringPtr("fields,services"),
 	})
 
 	if err != nil {
 		return diag.Errorf("Error reading toolchain: %s", err)
 	}
+
+	if len(response.Items) == 0 {
+		return diag.Errorf("No toolchain found with GUID: %s", toolchainID)
+	}
+
+	toolchain := response.Items[0]
 
 	var integrationID string
 

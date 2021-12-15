@@ -75,6 +75,9 @@ func resourceOpenToolchainIntegrationKeyProtectCreate(ctx context.Context, d *sc
 	instanceRegion := d.Get("instance_region").(string)
 	resourceGroup := d.Get("resource_group").(string)
 
+	envIDParts := strings.Split(envID, ":")
+	region := envIDParts[len(envIDParts)-1]
+
 	config := m.(*ProviderConfig)
 	c := config.OTClient
 
@@ -99,14 +102,21 @@ func resourceOpenToolchainIntegrationKeyProtectCreate(ctx context.Context, d *sc
 		return diag.Errorf("Error creating KeyProtect integration: %s", err)
 	}
 
-	toolchain, _, err := c.GetToolchainWithContext(ctx, &oc.GetToolchainOptions{
-		GUID:  &toolchainID,
-		EnvID: &envID,
+	response, _, err := c.GetToolchainWithContext(ctx, &oc.GetToolchainOptions{
+		GUID:    &toolchainID,
+		Region:  &region,
+		Include: getStringPtr("fields,services"),
 	})
 
 	if err != nil {
 		return diag.Errorf("Error reading toolchain: %s", err)
 	}
+
+	if len(response.Items) == 0 {
+		return diag.Errorf("No toolchain found with GUID: %s", toolchainID)
+	}
+
+	toolchain := response.Items[0]
 
 	var integrationID string
 
