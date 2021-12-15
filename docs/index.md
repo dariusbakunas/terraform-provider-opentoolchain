@@ -29,7 +29,6 @@ Alternatively, you can set IAM Access token by exporting the `IC_IAM_TOKEN`, `IB
 
 ### Optional
 
-- **base_url** (String) Open Toolchain API base URL (for example 'https://cloud.ibm.com')
 - **iam_access_token** (String, Sensitive) The IBM Cloud Identity and Access Management token used to access Open Toolchain APIs
 - **iam_api_key** (String, Sensitive) The IBM Cloud IAM api key used to retrieve IAM access token if `iam_access_token` is not specified
 - **iam_base_url** (String) IBM IAM base URL
