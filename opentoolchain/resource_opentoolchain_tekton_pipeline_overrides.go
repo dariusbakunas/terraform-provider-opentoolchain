@@ -280,13 +280,13 @@ func resourceOpenToolchainTektonPipelineOverridesCreate(ctx context.Context, d *
 	config := m.(*ProviderConfig)
 	c := config.OTClient
 
-	patchOptions := &oc.PatchTektonPipelineOptions{
-		GUID:  &guid,
-		EnvID: &envID,
-	}
-
 	envIDParts := strings.Split(envID, ":")
 	region := envIDParts[len(envIDParts)-1]
+
+	patchOptions := &oc.PatchTektonPipelineOptions{
+		GUID:   &guid,
+		Region: &region,
+	}
 
 	// we have to read existing envProperties first
 	pipeline, _, err := c.GetTektonPipelineWithContext(ctx, &oc.GetTektonPipelineOptions{
@@ -359,13 +359,13 @@ func resourceOpenToolchainTektonPipelineOverridesDelete(ctx context.Context, d *
 	config := m.(*ProviderConfig)
 	c := config.OTClient
 
-	patchOptions := &oc.PatchTektonPipelineOptions{
-		GUID:  &guid,
-		EnvID: &envID,
-	}
-
 	envIDParts := strings.Split(envID, ":")
 	region := envIDParts[len(envIDParts)-1]
+
+	patchOptions := &oc.PatchTektonPipelineOptions{
+		GUID:   &guid,
+		Region: &region,
+	}
 
 	originalProps := d.Get("original_properties")
 
@@ -474,7 +474,7 @@ func resourceOpenToolchainTektonPipelineOverridesUpdate(ctx context.Context, d *
 
 		patchOptions := &oc.PatchTektonPipelineOptions{
 			GUID:          &guid,
-			EnvID:         &envID,
+			Region:        &region,
 			EnvProperties: makeEnvPatch(currentEnv, textEnv, secretEnv, deletedKeys, newOriginalProps),
 		}
 

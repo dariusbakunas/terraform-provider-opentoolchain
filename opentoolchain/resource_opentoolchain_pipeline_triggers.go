@@ -151,7 +151,7 @@ func resourceOpenToolchainPipelineTriggersCreate(ctx context.Context, d *schema.
 	if triggers, ok := d.GetOk("trigger"); ok {
 		patchOptions := &oc.PatchTektonPipelineOptions{
 			GUID:     &guid,
-			EnvID:    &envID,
+			Region:   &region,
 			Triggers: createTriggerPatch(triggers.(*schema.Set).List(), pipeline.Triggers),
 		}
 
@@ -192,7 +192,7 @@ func resourceOpenToolchainPipelineTriggersUpdate(ctx context.Context, d *schema.
 
 		patchOptions := &oc.PatchTektonPipelineOptions{
 			GUID:     &guid,
-			EnvID:    &envID,
+			Region:   &region,
 			Triggers: createTriggerPatch(triggers.(*schema.Set).List(), pipeline.Triggers),
 		}
 

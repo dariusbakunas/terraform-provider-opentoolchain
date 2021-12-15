@@ -203,8 +203,8 @@ func resourceOpenToolchainPipelinePropertiesCreate(ctx context.Context, d *schem
 	region := envIDParts[len(envIDParts)-1]
 
 	patchOptions := &oc.PatchTektonPipelineOptions{
-		GUID:  &guid,
-		EnvID: &envID,
+		GUID:   &guid,
+		Region: &region,
 	}
 
 	// we have to read existing envProperties first
@@ -277,8 +277,8 @@ func resourceOpenToolchainPipelinePropertiesDelete(ctx context.Context, d *schem
 	c := config.OTClient
 
 	patchOptions := &oc.PatchTektonPipelineOptions{
-		GUID:  &guid,
-		EnvID: &envID,
+		GUID:   &guid,
+		Region: &region,
 	}
 
 	originalProps := d.Get("original_properties")
@@ -378,7 +378,7 @@ func resourceOpenToolchainPipelinePropertiesUpdate(ctx context.Context, d *schem
 
 		patchOptions := &oc.PatchTektonPipelineOptions{
 			GUID:          &guid,
-			EnvID:         &envID,
+			Region:        &region,
 			EnvProperties: makeEnvPatch(currentEnv, textEnv, secretEnv, deletedKeys, newOriginalProps),
 		}
 

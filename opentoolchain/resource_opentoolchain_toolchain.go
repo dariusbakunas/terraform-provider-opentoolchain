@@ -366,8 +366,9 @@ func resourceOpenToolchainToolchainDelete(ctx context.Context, d *schema.Resourc
 	log.Printf("[DEBUG] Deleting toolchain: %s", d.Id())
 
 	_, err := c.DeleteToolchainWithContext(ctx, &oc.DeleteToolchainOptions{
-		Region: &region,
-		GUID:   &guid,
+		Region:                 &region,
+		GUID:                   &guid,
+		UnbindDeprovisionTools: getBoolPtr(true),
 	})
 
 	if err != nil {

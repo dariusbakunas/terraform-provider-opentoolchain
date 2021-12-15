@@ -298,7 +298,7 @@ func resourceOpenToolchainTektonPipelineCreate(ctx context.Context, d *schema.Re
 
 	patchOptions := &oc.PatchTektonPipelineOptions{
 		GUID:                 &instanceID,
-		EnvID:                &envID,
+		Region:               &region,
 		EnvProperties:        expandTektonPipelineEnvProps(textEnv, secretEnv),
 		PipelineDefinitionID: definition.Definition.ID,
 		Inputs:               definition.Inputs,
@@ -460,6 +460,9 @@ func resourceOpenToolchainTektonPipelineUpdate(ctx context.Context, d *schema.Re
 	envID := d.Get("env_id").(string)
 	toolchainID := d.Get("toolchain_id").(string)
 
+	envIDParts := strings.Split(envID, ":")
+	region := envIDParts[len(envIDParts)-1]
+
 	config := m.(*ProviderConfig)
 	c := config.OTClient
 
@@ -484,8 +487,8 @@ func resourceOpenToolchainTektonPipelineUpdate(ctx context.Context, d *schema.Re
 	}
 
 	patchOptions := &oc.PatchTektonPipelineOptions{
-		GUID:  &pipelineID,
-		EnvID: &envID,
+		GUID:   &pipelineID,
+		Region: &region,
 	}
 
 	if d.HasChange("definition") {
