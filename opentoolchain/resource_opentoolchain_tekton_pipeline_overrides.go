@@ -326,10 +326,10 @@ func resourceOpenToolchainTektonPipelineOverridesCreate(ctx context.Context, d *
 
 		// log.Printf("[DEBUG] Patching tekton pipeline: %v", dbgPrint(patchOptions))
 
-		patchedPipeline, _, err := c.PatchTektonPipelineWithContext(ctx, patchOptions)
+		patchedPipeline, patchResp, err := c.PatchTektonPipelineWithContext(ctx, patchOptions)
 
 		if err != nil {
-			return diag.Errorf("Failed patching tekton pipeline: %s", err)
+			return diag.Errorf("Failed patching tekton pipeline: %s\n%s", err, patchResp)
 		}
 
 		if patchedPipeline != nil {
